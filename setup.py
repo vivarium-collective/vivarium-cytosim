@@ -7,14 +7,13 @@ with open("README.md", 'r') as readme:
     long_description = readme.read()
 
 setup(
-    name='',  # TODO: Put your package name here.
+    name='vivarium_models',
     version='0.0.1',
     packages=[
-        # TODO: Replace 'template' with the name of your folder.
-        'template',
-        'template.processes',
-        'template.compartments',
-        'template.experiments',
+        'vivarium_models',
+        'vivarium_models.processes',
+        'vivarium_models.compartments',
+        'vivarium_models.experiments',
     ],
     author='',  # TODO: Put your name here.
     author_email='',  # TODO: Put your email here.
