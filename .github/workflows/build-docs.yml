@@ -1,0 +1,45 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2.3.1
+      with:
+        persist-credentials: false
+    - uses: webfactory/ssh-agent@v0.4.1
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Setup MiniConda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: 3.8
+        channels: readdy/label/dev,conda-forge
+    - name: Install Conda Deps
+      shell: bash -l {0}
+      run: |
+        conda install readdy
+    - name: Install Dependencies
+      shell: bash -l {0}
+      run: |
+        pip install --upgrade pip
+        pip install .[dev]
+    - name: Generate Docs
+      shell: bash -l {0}
+      run: |
+        make gen-docs
+        touch docs/_build/html/.nojekyll
+    - name: Publish Docs
+      uses: JamesIves/github-pages-deploy-action@3.7.1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BASE_BRANCH: main # The branch the action should deploy from.
+        BRANCH: gh-pages # The branch the action should deploy to.
+        FOLDER: docs/_build/html/ # The folder the action should deploy.
+
