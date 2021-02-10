@@ -8,17 +8,11 @@ from setuptools import find_packages, setup
 with open("README.md") as readme_file:
     readme = readme_file.read()
 
-modeling_requirements = [
-    "vivarium-core",
-    "simularium-models @ git+ssh://git@github.com/allen-cell-animated/simularium-models.git",
-]
-
 setup_requirements = [
     "pytest-runner>=5.2",
 ]
 
 test_requirements = [
-    *modeling_requirements,
     "black>=19.10b0",
     "codecov>=2.1.4",
     "flake8>=3.8.3",
@@ -44,7 +38,8 @@ dev_requirements = [
 ]
 
 requirements = [
-    *modeling_requirements,
+    "vivarium-core",
+    "simularium-models @ git+ssh://git@github.com/allen-cell-animated/simularium-models.git",
 ]
 
 extra_requirements = {

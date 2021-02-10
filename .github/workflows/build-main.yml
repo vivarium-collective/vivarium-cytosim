@@ -15,8 +15,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
-        os: [ubuntu-latest, macOS-latest]
+        python-version: [3.8]
+        os: [ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -73,6 +73,7 @@ jobs:
       run: |
         flake8 vivarium_models --count --verbose --show-source --statistics
     - name: Check with black
+      shell: bash -l {0}
       run: |
         black --check vivarium_models
 
