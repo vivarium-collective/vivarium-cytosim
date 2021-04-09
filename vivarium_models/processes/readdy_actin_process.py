@@ -3,7 +3,7 @@ import numpy as np
 
 from vivarium.core.process import Process
 from vivarium.core.composition import (
-    simulate_process_in_experiment,
+    simulate_process,
     PROCESS_OUT_DIR,
 )
 from vivarium.plots.simulation_output import plot_simulation_output
@@ -36,8 +36,8 @@ class ReaddyActinProcess(Process):
         "actin_concentration": 200.0,  # uM
         "arp23_concentration": 10.0,  # uM
         "cap_concentration": 0.0,  # uM
-        "n_fibers": 0, 
-        "fiber_length": 0.0, 
+        "n_fibers": 0,
+        "fiber_length": 0.0,
         "actin_radius": 2.0,  # nm
         "arp23_radius": 2.0,  # nm
         "cap_radius": 3.0,  # nm
@@ -54,7 +54,7 @@ class ReaddyActinProcess(Process):
         "nucleate_ATP_rate": 2.1e6,  # 1/ns
         "nucleate_ADP_rate": 7.0e5,  # 1/ns
         "barbed_shrink_ATP_rate": 1.4e-14,  # 1/ns
-        "barbed_shrink_ADP_rate": 8.0-14,  # 1/ns
+        "barbed_shrink_ADP_rate": 8.0e-14,  # 1/ns
         "arp_bind_ATP_rate": 2.1e6,  # 1/ns
         "arp_bind_ADP_rate": 7.0e5,  # 1/ns
         "arp_unbind_ATP_rate": 1.4e-14,  # 1/ns
@@ -121,12 +121,6 @@ class ReaddyActinProcess(Process):
                 }
             }
         }
-
-    def derivers(self):
-        """
-        declare which derivers are needed for this process
-        """
-        return {}
 
     @staticmethod
     def add_topologies_to_readdy(readdy_simulation, topologies):
@@ -269,12 +263,12 @@ class ReaddyActinProcess(Process):
                     "type": "Arp23-Dimer",
                     "particles": {
                         1: {
-                            "type": "arp2#ATP",
+                            "type": "arp2",
                             "position": np.array([0, 0, 0]),
                             "neighbors": [2],
                         },
                         2: {
-                            "type": "arp3",
+                            "type": "arp3#ATP",
                             "position": np.array([0, 0, 4]),
                             "neighbors": [1],
                         },
@@ -288,7 +282,7 @@ class ReaddyActinProcess(Process):
             "total_time": 0.000000005,  # 1e3 steps
             "initial_state": initial_state,
         }
-        output = simulate_process_in_experiment(readdy_actin_process, sim_settings)
+        output = simulate_process(readdy_actin_process, sim_settings)
         return output
 
 

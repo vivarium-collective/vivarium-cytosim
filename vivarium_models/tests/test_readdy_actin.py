@@ -19,17 +19,17 @@ def test_readdy_actin_process():
     assert len(output["topologies"]) == 2
     for t in output["topologies"]:
         top = output["topologies"][t]
-        if top["type"][1] == "Actin-Monomer":
+        if top["type"][0] == "Actin-Monomer":
             found_monomer = True
             assert len(top["particles"]) == 1
-            assert "actin#free" in top["particles"]["0"]["type"][1]
-            assert len(top["particles"]["0"]["neighbors"][1]) == 0
-        if top["type"][1] == "Arp23-Dimer":
+            assert "actin#free" in top["particles"]["0"]["type"][0]
+            assert len(top["particles"]["0"]["neighbors"][0]) == 0
+        if top["type"][0] == "Arp23-Dimer":
             found_dimer = True
             assert len(top["particles"]) == 2
-            assert "arp2" in top["particles"]["1"]["type"][1]
-            assert top["particles"]["1"]["neighbors"][1] == [2]
-            assert "arp3" in top["particles"]["2"]["type"][1]
-            assert top["particles"]["2"]["neighbors"][1] == [1]
+            assert "arp2" in top["particles"]["1"]["type"][0]
+            assert top["particles"]["1"]["neighbors"][0] == [2]
+            assert "arp3" in top["particles"]["2"]["type"][0]
+            assert top["particles"]["2"]["neighbors"][0] == [1]
     assert found_monomer
     assert found_dimer

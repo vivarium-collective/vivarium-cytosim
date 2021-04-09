@@ -27,6 +27,8 @@ a.get_value()  # 10
 **Stable Release:** `pip install vivarium_models`<br>
 **Development Head:** `pip install git+https://github.com/allen-cell-animated/vivarium_models.git`
 
+ReaDDy models depend on ReaDDy, install it with `conda install -c readdy/label/dev readdy`
+
 ## Documentation
 
 For full package documentation please visit [allen-cell-animated.github.io/vivarium_models](https://allen-cell-animated.github.io/vivarium_models).

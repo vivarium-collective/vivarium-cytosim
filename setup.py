@@ -39,7 +39,7 @@ dev_requirements = [
 
 requirements = [
     "vivarium-core",
-    "simularium-models @ git+ssh://git@github.com/allen-cell-animated/simularium-models.git",
+    "simularium_models_util @ git+https://github.com/allen-cell-animated/simularium-models-util.git",
 ]
 
 extra_requirements = {
