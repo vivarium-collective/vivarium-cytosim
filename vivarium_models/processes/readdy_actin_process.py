@@ -3,13 +3,13 @@ import numpy as np
 
 from vivarium.core.process import Process
 from vivarium.core.composition import (
-    simulate_process_in_experiment,
+    simulate_process,
     PROCESS_OUT_DIR,
 )
 from vivarium.plots.simulation_output import plot_simulation_output
 
 from tqdm import tqdm
-from simularium_models import ActinUtil
+from simularium_models_util.actin import ActinSimulation
 
 
 NAME = "ReaDDy_actin"
@@ -24,55 +24,59 @@ class ReaddyActinProcess(Process):
     name = NAME
 
     defaults = {
+        "name": "actin",
+        "total_steps": 1e3,
+        "timestep": 0.1,
         "box_size": 150.0,  # nm
-        "actin_concentration": 250.0,  # uM
+        "temperature_C": 22.0,  # from Pollard experiments
+        "viscosity": 8.1,  # cP, viscosity in cytoplasm
+        "force_constant": 250.0,
+        "reaction_distance": 1.0,  # nm
+        "n_cpu": 4,
+        "actin_concentration": 200.0,  # uM
         "arp23_concentration": 10.0,  # uM
         "cap_concentration": 0.0,  # uM
+        "n_fibers": 0,
+        "fiber_length": 0.0,
+        "actin_radius": 2.0,  # nm
+        "arp23_radius": 2.0,  # nm
+        "cap_radius": 3.0,  # nm
         "dimerize_rate": 2.1e-2,  # 1/ns
         "dimerize_reverse_rate": 1.4e-1,  # 1/ns
         "trimerize_rate": 2.1e-2,  # 1/ns
         "trimerize_reverse_rate": 1.4e-1,  # 1/ns
         "pointed_growth_ATP_rate": 2.4e5,  # 1/ns
-        "pointed_growth_ADP_rate": (0.16 / 1.3) * 2.4e5,  # 1/ns
-        "pointed_shrink_ATP_rate": 0.8e-14,  # 1/ns
-        "pointed_shrink_ADP_rate": (0.3 / 0.8) * 0.8e-14,  # 1/ns
+        "pointed_growth_ADP_rate": 3.0e4,  # 1/ns
+        "pointed_shrink_ATP_rate": 8.0e-15,  # 1/ns
+        "pointed_shrink_ADP_rate": 3.0e-15,  # 1/ns
         "barbed_growth_ATP_rate": 2.1e6,  # 1/ns
-        "barbed_growth_ADP_rate": (4.0 / 12.0) * 2.1e6,  # 1/ns
+        "barbed_growth_ADP_rate": 7.0e5,  # 1/ns
         "nucleate_ATP_rate": 2.1e6,  # 1/ns
-        "nucleate_ADP_rate": (4.0 / 12.0) * 2.1e6,  # 1/ns
+        "nucleate_ADP_rate": 7.0e5,  # 1/ns
         "barbed_shrink_ATP_rate": 1.4e-14,  # 1/ns
-        "barbed_shrink_ADP_rate": (8.0 / 1.4) * 1.4e-14,  # 1/ns
+        "barbed_shrink_ADP_rate": 8.0e-14,  # 1/ns
         "arp_bind_ATP_rate": 2.1e6,  # 1/ns
-        "arp_bind_ADP_rate": (4.0 / 12.0) * 2.1e6,  # 1/ns
+        "arp_bind_ADP_rate": 7.0e5,  # 1/ns
         "arp_unbind_ATP_rate": 1.4e-14,  # 1/ns
-        "arp_unbind_ADP_rate": (8.0 / 1.4) * 1.4e-14,  # 1/ns
+        "arp_unbind_ADP_rate": 8.0e-14,  # 1/ns
         "barbed_growth_branch_ATP_rate": 2.1e6,  # 1/ns
-        "barbed_growth_branch_ADP_rate": (4.0 / 12.0) * 2.1e6,  # 1/ns
+        "barbed_growth_branch_ADP_rate": 7.0e5,  # 1/ns
         "debranching_ATP_rate": 1.4e-14,  # 1/ns
-        "debranching_ADP_rate": (8.0 / 1.4) * 1.4e-14,  # 1/ns
+        "debranching_ADP_rate": 8.0e-14,  # 1/ns
         "cap_bind_rate": 2.1e6,  # 1/ns
         "cap_unbind_rate": 1.4e-14,  # 1/ns
         "hydrolysis_actin_rate": 3.5e-15,  # 1/ns
         "hydrolysis_arp_rate": 3.5e-15,  # 1/ns
         "nucleotide_exchange_actin_rate": 1e-10,  # 1/ns
         "nucleotide_exchange_arp_rate": 1e-10,  # 1/ns
-        "temperature_C": 22.0,  # from Pollard experiments
-        "eta": 8.1,  # cP, viscosity in cytoplasm
-        "force_constant": 9000.0,
-        "reaction_distance": 1.0,  # nm
-        "actin_radius": 2.0,  # nm
-        "arp23_radius": 2.0,  # nm
-        "cap_radius": 3.0,  # nm
-        "timestep": 0.005,  # ns
-        "n_cpu": 4,
+        "verbose": False,
     }
 
     def __init__(self, parameters=None):
         super(ReaddyActinProcess, self).__init__(parameters)
-        (
-            self.readdy_simulation,
-            self.readdy_system,
-        ) = ActinUtil().create_actin_simulation(self.parameters)
+        actin_simulation = ActinSimulation(self.parameters)
+        self.readdy_system = actin_simulation.system
+        self.readdy_simulation = actin_simulation.simulation
 
     def ports_schema(self):
         """
@@ -117,12 +121,6 @@ class ReaddyActinProcess(Process):
                 }
             }
         }
-
-    def derivers(self):
-        """
-        declare which derivers are needed for this process
-        """
-        return {}
 
     @staticmethod
     def add_topologies_to_readdy(readdy_simulation, topologies):
@@ -265,12 +263,12 @@ class ReaddyActinProcess(Process):
                     "type": "Arp23-Dimer",
                     "particles": {
                         1: {
-                            "type": "arp2#ATP",
+                            "type": "arp2",
                             "position": np.array([0, 0, 0]),
                             "neighbors": [2],
                         },
                         2: {
-                            "type": "arp3",
+                            "type": "arp3#ATP",
                             "position": np.array([0, 0, 4]),
                             "neighbors": [1],
                         },
@@ -284,7 +282,7 @@ class ReaddyActinProcess(Process):
             "total_time": 0.000000005,  # 1e3 steps
             "initial_state": initial_state,
         }
-        output = simulate_process_in_experiment(readdy_actin_process, sim_settings)
+        output = simulate_process(readdy_actin_process, sim_settings)
         return output
 
 
