@@ -69,6 +69,11 @@ class ReaddyActinProcess(Process):
         "hydrolysis_arp_rate": 3.5e-15,  # 1/ns
         "nucleotide_exchange_actin_rate": 1e-10,  # 1/ns
         "nucleotide_exchange_arp_rate": 1e-10,  # 1/ns
+        "use_box_actin": False,
+        "use_box_arp": False,
+        "use_box_cap": False,
+        "implicit_actin_concentration": 0,
+        "nonspatial_polymerization": False,
         "verbose": False,
     }
 
@@ -121,6 +126,40 @@ class ReaddyActinProcess(Process):
                 }
             }
         }
+
+    def initial_state(self, config):
+        # TODO: make this more general
+        initial_state = {
+            "topologies": {
+                0: {
+                    "type": "Actin-Monomer",
+                    "particles": {
+                        0: {
+                            "type": "actin#free_ATP",
+                            "position": np.array([2, 0, 0]),
+                            "neighbors": [],
+                        }
+                    },
+                },
+                1: {
+                    "type": "Arp23-Dimer",
+                    "particles": {
+                        1: {
+                            "type": "arp2",
+                            "position": np.array([0, 0, 0]),
+                            "neighbors": [2],
+                        },
+                        2: {
+                            "type": "arp3#ATP",
+                            "position": np.array([0, 0, 4]),
+                            "neighbors": [1],
+                        },
+                    },
+                },
+            }
+        }
+
+        return initial_state
 
     @staticmethod
     def add_topologies_to_readdy(readdy_simulation, topologies):
