@@ -24,10 +24,16 @@ a.get_value()  # 10
 
 ## Installation
 
-**Stable Release:** `pip install vivarium_models`<br>
-**Development Head:** `pip install git+https://github.com/allen-cell-animated/vivarium_models.git`
+Install conda: https://docs.conda.io/en/latest/miniconda.html
 
-ReaDDy models depend on ReaDDy, install it with `conda install -c readdy/label/dev readdy`
+Using conda, you can run `conda env create -f env.yml`, which will create a conda environment called `vivarium_models` with all the required dependencies (including ReaDDy) installed.
+
+### Alternatively:
+
+**Stable Release:** `pip install vivarium_models`<br>
+**Development Head:** `pip install git+https://github.com/allen-cell-animated/vivarium-models.git`
+
+ReaDDy models depend on ReaDDy, which requires conda. Install ReaDDy with `conda install -c readdy/label/dev readdy` after adding the conda-forge channel `conda config --add channels conda-forge`
 
 ## Documentation
 
@@ -58,48 +64,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for information related to developing the
 
     This will generate and launch a web browser to view the most up-to-date
     documentation for your Python package.
-
-#### Additional Optional Setup Steps:
-
--   Turn your project into a GitHub repository:
-    -   Make an account on [github.com](https://github.com)
-    -   Go to [make a new repository](https://github.com/new)
-    -   _Recommendations:_
-        -   _It is strongly recommended to make the repository name the same as the Python
-            package name_
-        -   _A lot of the following optional steps are *free* if the repository is Public,
-            plus open source is cool_
-    -   After a GitHub repo has been created, run the commands listed under:
-        "...or push an existing repository from the command line"
--   Register your project with Codecov:
-    -   Make an account on [codecov.io](https://codecov.io)(Recommended to sign in with GitHub)
-        everything else will be handled for you.
--   Ensure that you have set GitHub pages to build the `gh-pages` branch by selecting the
-    `gh-pages` branch in the dropdown in the "GitHub Pages" section of the repository settings.
-    ([Repo Settings](https://github.com/allen-cell-animated/vivarium_models/settings))
--   Register your project with PyPI:
-    -   Make an account on [pypi.org](https://pypi.org)
-    -   Go to your GitHub repository's settings and under the
-        [Secrets tab](https://github.com/allen-cell-animated/vivarium_models/settings/secrets/actions),
-        add a secret called `PYPI_TOKEN` with your password for your PyPI account.
-        Don't worry, no one will see this password because it will be encrypted.
-    -   Next time you push to the branch `main` after using `bump2version`, GitHub
-        actions will build and deploy your Python package to PyPI.
-
-#### Suggested Git Branch Strategy
-
-1. `main` is for the most up-to-date development, very rarely should you directly
-   commit to this branch. GitHub Actions will run on every push and on a CRON to this
-   branch but still recommended to commit to your development branches and make pull
-   requests to main. If you push a tagged commit with bumpversion, this will also release to PyPI.
-2. Your day-to-day work should exist on branches separate from `main`. Even if it is
-   just yourself working on the repository, make a PR from your working branch to `main`
-   so that you can ensure your commits don't break the development head. GitHub Actions
-   will run on every push to any branch or any pull request from any branch to any other
-   branch.
-3. It is recommended to use "Squash and Merge" commits when committing PR's. It makes
-   each set of changes to `main` atomic and as a side effect naturally encourages small
-   well defined PR's.
 
 
 **Allen Institute Software License**
