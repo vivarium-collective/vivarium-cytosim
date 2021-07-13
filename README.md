@@ -8,20 +8,6 @@ Simularium prototypes of connecting models in Vivarium
 
 ---
 
-## Features
-
--   Store values and retain the prior value in memory
--   ... some other functionality
-
-## Quick Start
-
-```python
-from vivarium_models import Example
-
-a = Example()
-a.get_value()  # 10
-```
-
 ## Installation
 
 Install conda: https://docs.conda.io/en/latest/miniconda.html
