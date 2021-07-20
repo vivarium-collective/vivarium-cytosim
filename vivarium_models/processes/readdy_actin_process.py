@@ -104,27 +104,30 @@ class ReaddyActinProcess(Process):
                         "_updater": "set",
                         "_emit": True,
                     },
-                    "particles": {
-                        "*": {
-                            "type": {
-                                "_default": "",
-                                "_updater": "set",
-                                "_emit": True,
-                            },
-                            "position": {
-                                "_default": np.zeros(3),
-                                "_updater": "set",
-                                "_emit": True,
-                            },
-                            "neighbors": {
-                                "_default": [],
-                                "_updater": "set",
-                                "_emit": True,
-                            },
-                        },
+                    "particle_id": {
+                        "_default": [],
+                        "_updater": "set",
+                        "_emit": True,
+                    }}},
+            "particles": {
+                "*": {
+                    "type": {
+                        "_default": "",
+                        "_updater": "set",
+                        "_emit": True,
                     },
-                }
-            }
+                    "position": {
+                        "_default": np.zeros(3),
+                        "_updater": "set",
+                        "_emit": True,
+                    },
+                    "neighbors": {
+                        "_default": [],
+                        "_updater": "set",
+                        "_emit": True,
+                    },
+                },
+            },
         }
 
     def initial_state(self, config):

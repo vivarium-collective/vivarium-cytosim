@@ -1,6 +1,8 @@
 import numpy as np
+import uuid
 
-from vivarium.core.process import Deriver
+from vivarium.core.process import Deriver, Process
+from vivarium.core.engine import Engine
 from simularium_models_util.actin import FiberData, CurvePointData, ActinAnalyzer, ActinGenerator, ActinUtil
 
 
@@ -11,50 +13,56 @@ class FiberToMonomer(Deriver):
         super().__init__(parameters)
 
     def ports_schema(self):
+        # add a level here for topologies to match ReaddyActinProcess
         return {
             'fibers': {
-                },
+                '_default': []},
             'monomers': {
                 "*": {
-                    "type": {"_default": ""},
-                    "particles": {
-                        "*": {
-                            "type": {
-                                "_default": "",
-                            },
-                            "position": {
-                                "_default": np.zeros(3),
-                            },
-                            "neighbors": {
-                                "_default": [],
-                            },
-                        },
+                    "type": {
+                        "_default": "",
                     },
-                }
+                    "position": {
+                        "_default": np.zeros(3),
+                    },
+                    "neighbors": {
+                        "_default": [],
+                    },
+                },
             }
         }
 
     def next_update(self, timestep, states):
         fibers = states['fibers']
-        monomers = states['monomers']
+        previous_monomers = states['monomers']
 
         # ActinUtil.add_fibers_from_data(simulation, fibers_data)
         fiber_monomers = ActinGenerator.get_monomers(fibers)
+        # TODO: handle the ends of the fiber, don't make neighbors off the end of the fiber
 
-        monomers = {}
+        monomer_update = {}
+        if len(previous_monomers) > 0:
+            monomer_update['_delete'] = list(previous_monomers.keys())
+
+        add_monomers = []
         for fiber in fiber_monomers:
-            for monomer_type, position, neighbors in enumerate(zip(**fiber)):
-                monomers.append({
-                    'type': monomer_type,
-                    'position': position,
-                    'neighbors': neighbors})
-            
+            monomers = list(zip(*fiber))
+            monomer_ids = [str(uuid.uuid4()) for _ in range(len(monomers) + 1)]
 
+            for index, monomer in enumerate(monomers):
+                monomer_type, position, neighbors = monomer
+                id = monomer_ids[index]
+                add_monomers.append({
+                    'key': id,
+                    'state': {
+                        'type': monomer_type,
+                        'position': position,
+                        'neighbors': [monomer_ids[neighbor] for neighbor in neighbors]}})
 
-        import ipdb; ipdb.set_trace()
+        monomer_update['_add'] = add_monomers
 
         return {
-            'monomers': fiber_monomers}
+            'monomers': monomer_update}
 
 
 def get_initial_fiber_data():
@@ -63,7 +71,7 @@ def get_initial_fiber_data():
             0,
             [
                 CurvePointData(
-                    np.array([-90, 0, 0]),
+                    np.array([-75, 0, 0]),
                     np.array([1, 0, 0]),
                     0,
                     ),
@@ -79,9 +87,23 @@ def get_initial_fiber_data():
 def test_fiber_to_monomer():
     fiber_data = get_initial_fiber_data()
     fiber_to_monomer = FiberToMonomer()
-    update = fiber_to_monomer.next_update(0, {'fibers': fiber_data})
 
-    import ipdb; ipdb.set_trace()
+    engine = Engine({
+        'processes': {
+            'fiber_to_monomer': fiber_to_monomer},
+        'topology': {
+            'fiber_to_monomer': {
+                'fibers': ('fibers',),
+                'monomers': ('monomers',)}},
+        'initial_state': {
+            'fibers': fiber_data,
+            'monomers': {}}})
+
+    engine.update(1.0)
+
+
+    # update = fiber_to_monomer.next_update(0, )
+
 
 
 if __name__ == '__main__':

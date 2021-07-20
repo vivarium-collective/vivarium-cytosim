@@ -2,7 +2,8 @@ from vivarium.core.composer import Composer
 from vivarium.core.engine import Engine
 
 from vivarium_models.processes.readdy_actin_process import ReaddyActinProcess
-from vivarium_models.processes.fiber_controls import FiberControls
+from vivarium_models.processes.monomer_to_fiber import MonomerToFiber
+from vivarium_models.processes.fiber_to_monomer import FiberToMonomer
 
 class ActinFiber(Composer):
     defaults = {}
@@ -12,17 +13,21 @@ class ActinFiber(Composer):
 
     def generate_processes(self, config):
         readdy = ReaddyActinProcess(config.get('readdy_actin', {}))
-        fiber_controls = FiberControls(config.get('fiber_controls', {}))
+        fiber_to_monomer = FiberToMonomer(config.get('fiber_to_monomer', {}))
+        monomer_to_fiber = MonomerToFiber(config.get('monomer_to_fiber', {}))
 
         return {
             'readdy_actin': readdy,
-            'fiber_controls': fiber_controls}
+            'fiber_to_monomer': fiber_to_monomer,
+            'monomer_to_fiber': monomer_to_fiber}
 
     def generate_topology(self, config):
         return {
             'readdy_actin': {
                 'topologies': ('topologies',)},
-            'fiber_controls': {
+            'fiber_to_monomer': {
+                },
+            'monomer_to_fiber': {
                 'topologies': ('topologies',),
                 'fibers': ('fibers',)}}
 

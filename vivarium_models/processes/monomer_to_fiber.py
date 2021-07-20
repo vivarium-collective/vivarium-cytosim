@@ -3,7 +3,7 @@ import numpy as np
 from vivarium.core.process import Deriver
 from simularium_models_util.actin.actin_analyzer import ActinAnalyzer
 
-class FiberControls(Deriver):
+class MonomerToFiber(Deriver):
     defaults = {}
 
     def __init__(self, parameters):
