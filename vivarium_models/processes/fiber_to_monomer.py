@@ -3,7 +3,7 @@ import uuid
 
 from vivarium.core.process import Deriver, Process
 from vivarium.core.engine import Engine
-from simularium_models_util.actin import FiberData, CurvePointData, ActinAnalyzer, ActinGenerator, ActinUtil
+from simularium_models_util.actin import ActinGenerator, ActinTestData
 
 
 class FiberToMonomer(Deriver):
@@ -36,28 +36,25 @@ class FiberToMonomer(Deriver):
         fibers = states['fibers']
         previous_monomers = states['monomers']
 
-        # ActinUtil.add_fibers_from_data(simulation, fibers_data)
         fiber_monomers = ActinGenerator.get_monomers(fibers)
-        # TODO: handle the ends of the fiber, don't make neighbors off the end of the fiber
 
         monomer_update = {}
         if len(previous_monomers) > 0:
             monomer_update['_delete'] = list(previous_monomers.keys())
 
         add_monomers = []
-        for fiber in fiber_monomers:
-            monomers = list(zip(*fiber))
-            monomer_ids = [str(uuid.uuid4()) for _ in range(len(monomers) + 1)]
-
-            for index, monomer in enumerate(monomers):
-                monomer_type, position, neighbors = monomer
-                id = monomer_ids[index]
+        for fiber_id in fiber_monomers["topologies"]:
+            monomer_ids = fiber_monomers["topologies"][fiber_id]["particle_ids"]
+            for monomer_id in monomer_ids:
+                monomer = fiber_monomers["particles"][monomer_id]
                 add_monomers.append({
-                    'key': id,
+                    'key': monomer_id,
                     'state': {
-                        'type': monomer_type,
-                        'position': position,
-                        'neighbors': [monomer_ids[neighbor] for neighbor in neighbors]}})
+                        "type": monomer["type_name"],
+                        "position": monomer["position"],
+                        "neighbors": monomer["neighbor_ids"],
+                    }
+                })
 
         monomer_update['_add'] = add_monomers
 
@@ -66,23 +63,7 @@ class FiberToMonomer(Deriver):
 
 
 def get_initial_fiber_data():
-    return [
-        FiberData(
-            0,
-            [
-                CurvePointData(
-                    np.array([-75, 0, 0]),
-                    np.array([1, 0, 0]),
-                    0,
-                    ),
-                    CurvePointData(
-                        np.array([10, 0, 0]),
-                        np.array([1, 0, 0]),
-                        50,
-                        ),
-            ],
-            )
-    ]
+    return ActinTestData.linear_actin_fiber()
 
 def test_fiber_to_monomer():
     fiber_data = get_initial_fiber_data()
