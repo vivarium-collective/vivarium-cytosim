@@ -14,6 +14,20 @@ Install conda: https://docs.conda.io/en/latest/miniconda.html
 
 Using conda, you can run `conda env create -f env.yml`, which will create a conda environment called `vivarium_models` with all the required dependencies (including ReaDDy) installed.
 
+### MEDYAN
+
+To install MEDYAN:
+
+Download the MEDYAN source here (we are using version 4.2.0): http://medyan.org/download.html
+
+Unzip and cd into that dir, then at the command line:
+
+```
+./conf.sh
+cd build
+make
+```
+
 ### Alternatively:
 
 **Stable Release:** `pip install vivarium_models`<br>
