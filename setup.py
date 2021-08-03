@@ -40,6 +40,7 @@ dev_requirements = [
 requirements = [
     "vivarium-core",
     "simularium_models_util @ git+https://github.com/allen-cell-animated/simularium-models-util.git",
+    "Jinja2",
 ]
 
 extra_requirements = {
