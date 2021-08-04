@@ -2,6 +2,7 @@ import os
 import numpy as np
 
 from vivarium.core.process import Process
+from vivarium.core.engine import Engine, pf
 from vivarium.core.composition import (
     simulate_process,
     PROCESS_OUT_DIR,
@@ -9,7 +10,7 @@ from vivarium.core.composition import (
 from vivarium.plots.simulation_output import plot_simulation_output
 
 from tqdm import tqdm
-from simularium_models_util.actin import ActinSimulation
+from simularium_models_util.actin import ActinSimulation, ActinUtil, ActinTestData
 
 
 NAME = "ReaDDy_actin"
@@ -84,109 +85,102 @@ class ReaddyActinProcess(Process):
         self.readdy_simulation = actin_simulation.simulation
 
     def ports_schema(self):
-        """
-        ports_schema returns a dictionary that declares how each state will behave.
-        Each key can be assigned settings for the schema_keys declared in Store:
-
-        * `_default`
-        * `_updater`
-        * `_divider`
-        * `_value`
-        * `_properties`
-        * `_emit`
-        * `_serializer`
-        """
         return {
-            "topologies": {
-                "*": {
-                    "type": {
-                        "_default": "",
-                        "_updater": "set",
-                        "_emit": True,
-                    },
-                    "particle_id": {
-                        "_default": [],
-                        "_updater": "set",
-                        "_emit": True,
-                    }}},
-            "particles": {
-                "*": {
-                    "type": {
-                        "_default": "",
-                        "_updater": "set",
-                        "_emit": True,
-                    },
-                    "position": {
-                        "_default": np.zeros(3),
-                        "_updater": "set",
-                        "_emit": True,
-                    },
-                    "neighbors": {
-                        "_default": [],
-                        "_updater": "set",
-                        "_emit": True,
-                    },
-                },
-            },
-        }
+            "monomers": {
+                "topologies": {
+                    "*": {
+                        "type_name": {
+                            "_default": "",
+                            "_updater": "set",
+                            "_emit": True,
+                        },
+                        "particle_ids": {
+                            "_default": [],
+                            "_updater": "set",
+                            "_emit": True,
+                        }}},
+                "particles": {
+                    "*": {
+                        "type_name": {
+                            "_default": "",
+                            "_updater": "set",
+                            "_emit": True,
+                        },
+                        "position": {
+                            "_default": np.zeros(3),
+                            "_updater": "set",
+                            "_emit": True,
+                        },
+                        "neighbor_ids": {
+                            "_default": [],
+                            "_updater": "set",
+                            "_emit": True,
+                        }}}}}
 
-    def initial_state(self, config):
+    def initial_state(self, config=None):
         # TODO: make this more general
-        initial_state = {
-            "topologies": {
-                0: {
-                    "type": "Actin-Monomer",
-                    "particles": {
-                        0: {
-                            "type": "actin#free_ATP",
-                            "position": np.array([2, 0, 0]),
-                            "neighbors": [],
-                        }
+        return {
+            "monomers": {
+                "topologies": {
+                    0: {
+                        "type_name": "Actin-Monomer",
+                        "particle_ids": [0],
+                    },
+                    1: {
+                        "type_name": "Arp23-Dimer",
+                        "particle_ids": [1, 2],
                     },
                 },
-                1: {
-                    "type": "Arp23-Dimer",
-                    "particles": {
-                        1: {
-                            "type": "arp2",
-                            "position": np.array([0, 0, 0]),
-                            "neighbors": [2],
-                        },
-                        2: {
-                            "type": "arp3#ATP",
-                            "position": np.array([0, 0, 4]),
-                            "neighbors": [1],
-                        },
+                "particles": {
+                    0: {
+                        "type_name": "actin#free_ATP",
+                        "position": np.array([2, 0, 0]),
+                        "neighbor_ids": [],
                     },
-                },
-            }
-        }
+                    1: {
+                        "type_name": "arp2",
+                        "position": np.array([0, 0, 0]),
+                        "neighbor_ids": [2],
+                    },
+                    2: {
+                        "type_name": "arp3#ATP",
+                        "position": np.array([0, 0, 4]),
+                        "neighbor_ids": [1],
+                    }}}}
 
-        return initial_state
-
-    @staticmethod
-    def add_topologies_to_readdy(readdy_simulation, topologies):
+    def simulate_readdy(self, timestep):
         """
-        Add the given topologies of particles to the ReaDDy simulation
+        Simulate in ReaDDy for the given timestep
         """
-        for t in topologies:
-            particles = topologies[t]["particles"]
-            types = []
-            positions = []
-            for p in particles:
-                types.append(particles[p]["type"])
-                positions.append(particles[p]["position"])
-            top = readdy_simulation.add_topology(
-                topologies[t]["type"], types, np.array(positions)
+        def loop():
+            readdy_actions = self.readdy_simulation._actions
+            init = readdy_actions.initialize_kernel()
+            diffuse = readdy_actions.integrator_euler_brownian_dynamics(
+                self.parameters["timestep"]
             )
-            pid0 = -1
-            for pid, p in particles.items():
-                if pid0 < 0:
-                    pid0 = int(pid)
-                for n in range(len(particles[pid]["neighbors"])):
-                    top.get_graph().add_edge(
-                        int(pid) - pid0, int(p["neighbors"][n]) - pid0
-                    )
+            calculate_forces = readdy_actions.calculate_forces()
+            create_nl = readdy_actions.create_neighbor_list(
+                self.readdy_system.calculate_max_cutoff().magnitude
+            )
+            update_nl = readdy_actions.update_neighbor_list()
+            react = readdy_actions.reaction_handler_uncontrolled_approximation(
+                self.parameters["timestep"]
+            )
+            observe = readdy_actions.evaluate_observables()
+            init()
+            create_nl()
+            calculate_forces()
+            update_nl()
+            observe(0)
+            n_steps = int(timestep * 1e9 / self.parameters["timestep"])
+            for t in tqdm(range(1, n_steps + 1)):
+                diffuse()
+                update_nl()
+                react()
+                update_nl()
+                calculate_forces()
+                observe(t)
+        self.readdy_simulation._run_custom_loop(loop)
 
     @staticmethod
     def get_readdy_particle_edges(readdy_topologies):
@@ -204,78 +198,39 @@ class ReaddyActinProcess(Process):
         return result
 
     @staticmethod
-    def get_topologies_from_readdy(readdy_topologies):
+    def get_monomers_from_readdy(readdy_topologies):
         """
         get data for topologies of particles from ReaDDy topologies
         """
         edges = ReaddyActinProcess.get_readdy_particle_edges(readdy_topologies)
-        result = {}
-        for t in range(len(readdy_topologies)):
-            particles = {}
-            for p in readdy_topologies[t].particles:
+        result = {
+            "topologies": {},
+            "particles": {},
+        }
+        for index, topology in enumerate(readdy_topologies):
+            particle_ids = []
+            for p in topology.particles:
+                particle_ids.append(p.id)
                 neighbor_ids = []
                 for edge in edges:
                     if p.id == edge[0]:
                         neighbor_ids.append(edge[1])
                     elif p.id == edge[1]:
                         neighbor_ids.append(edge[0])
-                particles[p.id] = {
-                    "type": p.type,
+                result["particles"][p.id] = {
+                    "type_name": p.type,
                     "position": p.pos,
-                    "neighbors": neighbor_ids,
+                    "neighbor_ids": neighbor_ids,
                 }
-            result[t] = {"type": readdy_topologies[t].type, "particles": particles}
+            result["topologies"][index] = {"type_name": topology.type, "particle_ids": particle_ids}
         return result
 
     def next_update(self, timestep, states):
-
-        # set state of ReaDDy particles
-        ReaddyActinProcess.add_topologies_to_readdy(
-            self.readdy_simulation, states["topologies"]
-        )
-
-        # simulate in ReaDDy for the given timestep
-        def loop():
-
-            readdy_actions = self.readdy_simulation._actions
-            init = readdy_actions.initialize_kernel()
-            diffuse = readdy_actions.integrator_euler_brownian_dynamics(
-                self.parameters["timestep"]
-            )
-            calculate_forces = readdy_actions.calculate_forces()
-            create_nl = readdy_actions.create_neighbor_list(
-                self.readdy_system.calculate_max_cutoff().magnitude
-            )
-            update_nl = readdy_actions.update_neighbor_list()
-            react = readdy_actions.reaction_handler_uncontrolled_approximation(
-                self.parameters["timestep"]
-            )
-            observe = readdy_actions.evaluate_observables()
-
-            init()
-            create_nl()
-            calculate_forces()
-            update_nl()
-            observe(0)
-
-            n_steps = int(timestep * 1e9 / self.parameters["timestep"])
-            for t in tqdm(range(1, n_steps + 1)):
-                diffuse()
-                update_nl()
-                react()
-                update_nl()
-                calculate_forces()
-                observe(t)
-
-        self.readdy_simulation._run_custom_loop(loop)
-
-        # return an update that mirrors the ports structure
-        topologies = ReaddyActinProcess.get_topologies_from_readdy(
+        ActinUtil.add_monomers_from_data(self.readdy_simulation, states["monomers"])
+        self.simulate_readdy(timestep)
+        return ReaddyActinProcess.get_monomers_from_readdy(
             self.readdy_simulation.current_topologies
         )
-        return {
-            "topologies": topologies,
-        }
 
     # functions to configure and run the process
     def run_readdy_actin_process():
@@ -288,59 +243,33 @@ class ReaddyActinProcess(Process):
         # initialize the process
         readdy_actin_process = ReaddyActinProcess({})
 
-        # declare the initial state, mirroring the ports structure
-        initial_state = {
-            "topologies": {
-                0: {
-                    "type": "Actin-Monomer",
-                    "particles": {
-                        0: {
-                            "type": "actin#free_ATP",
-                            "position": np.array([2, 0, 0]),
-                            "neighbors": [],
-                        }
-                    },
-                },
-                1: {
-                    "type": "Arp23-Dimer",
-                    "particles": {
-                        1: {
-                            "type": "arp2",
-                            "position": np.array([0, 0, 0]),
-                            "neighbors": [2],
-                        },
-                        2: {
-                            "type": "arp3#ATP",
-                            "position": np.array([0, 0, 4]),
-                            "neighbors": [1],
-                        },
-                    },
-                },
-            }
-        }
-
         # run the simulation
         sim_settings = {
-            "total_time": 0.000000005,  # 1e3 steps
-            "initial_state": initial_state,
+            "total_time": 0.000000005,  # 50 steps
+            "initial_state": readdy_actin_process.initial_state(),
         }
         output = simulate_process(readdy_actin_process, sim_settings)
         return output
 
 
-def main():
-    """Simulate the process and plot results."""
-    # make an output directory to save plots
-    out_dir = os.path.join(PROCESS_OUT_DIR, NAME)
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
+def test_readdy_actin_process():
+    monomer_data = ActinTestData.linear_actin_monomers()
+    readdy_actin_process = ReaddyActinProcess()
 
-    output = ReaddyActinProcess.run_readdy_actin_process()
+    engine = Engine({
+        "processes": {
+            "readdy_actin_process": readdy_actin_process},
+        "topology": {
+            "readdy_actin_process": {
+                "monomers": ("monomers",)}},
+        "initial_state": {
+            "monomers": monomer_data}})
 
-    # plot the simulation output
-    plot_settings = {}
-    plot_simulation_output(output, plot_settings, out_dir)
+    engine.update(0.0000001) # 1e3 steps
+
+    output = engine.emitter.get_data()
+    print(pf(output))
 
 
 if __name__ == "__main__":
-    main()
+    test_readdy_actin_process()

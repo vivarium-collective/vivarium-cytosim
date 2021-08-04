@@ -14,16 +14,20 @@ class MonomerToFilament(Deriver):
         return {
             "filaments": {
                 "*": {
+                    "type_name": {
+                        "_default": "",
+                        "_updater": "set",
+                        "_emit": True,
+                    },
                     "points": {
                         "_default": [],
                         "_updater": "set",
                         "_emit": True,
-                    },
-                }},
+                    }}},
             "monomers": {
                 "topologies": {
                     "*": {
-                        "type": {
+                        "type_name": {
                             "_default": "",
                             "_updater": "set",
                             "_emit": True,
@@ -49,11 +53,7 @@ class MonomerToFilament(Deriver):
                             "_default": [],
                             "_updater": "set",
                             "_emit": True,
-                        },
-                    },
-                },
-            }
-        }
+                        }}}}}
 
     @staticmethod
     def get_next_actin_id(prev_actin_id, neighbor_ids):
@@ -96,9 +96,10 @@ class MonomerToFilament(Deriver):
         return axis_pos1 - 1.5 * (axis_pos2 - axis_pos1)
 
     @staticmethod
-    def get_filament(pointed_actin_id, particles, box_size):
-        positions = MonomerToFilament.get_actin_monomer_positions(pointed_actin_id, particles, box_size)
+    def get_filament(topology_id, pointed_actin_id, monomers, box_size):
+        positions = MonomerToFilament.get_actin_monomer_positions(pointed_actin_id, monomers["particles"], box_size)
         return {
+            "type_name": monomers["topologies"][topology_id]["type_name"],
             "points": [
                 MonomerToFilament.get_filament_end_point(-1, positions, box_size),
                 MonomerToFilament.get_filament_end_point(1, positions, box_size),
@@ -107,13 +108,15 @@ class MonomerToFilament(Deriver):
 
     @staticmethod
     def generate_filaments_from_monomers(monomers, box_size=150.):
-        pointed_actin_ids = []
-        for particle_id in monomers["particles"]:
-            if "pointed" in monomers["particles"][particle_id]["type_name"]:
-                pointed_actin_ids.append(particle_id)
+        pointed_actin_ids = {}
+        for topology_id in monomers["topologies"]:
+            for particle_id in monomers["topologies"][topology_id]["particle_ids"]:
+                if "pointed" in monomers["particles"][particle_id]["type_name"]:
+                    pointed_actin_ids[topology_id] = particle_id
+                    break
         result = {}
-        for pointed_actin_id in pointed_actin_ids:
-            result[pointed_actin_id] = MonomerToFilament.get_filament(pointed_actin_id, monomers["particles"], box_size)
+        for topology_id in pointed_actin_ids:
+            result[topology_id] = MonomerToFilament.get_filament(topology_id, pointed_actin_ids[topology_id], monomers, box_size)
         return result
 
     def next_update(self, timestep, states):
@@ -131,6 +134,7 @@ class MonomerToFilament(Deriver):
             add_filaments.append({
                 "key": filament_id,
                 "state": {
+                    "type_name": monomer_filaments[filament_id]["type_name"],
                     "points": monomer_filaments[filament_id]["points"],
                 },
             })

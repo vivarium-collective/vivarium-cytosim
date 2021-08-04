@@ -16,12 +16,16 @@ class FilamentToMonomer(Deriver):
         return {
             "filaments": {
                 "*": {
+                    "type_name": {
+                        "_default": "",
+                        "_updater": "set",
+                        "_emit": True,
+                    },
                     "points": {
                         "_default": [],
                         "_updater": "set",
                         "_emit": True,
-                    },
-                }},
+                    }}},
             "monomers": {
                 "topologies": {
                     "*": {
@@ -34,9 +38,7 @@ class FilamentToMonomer(Deriver):
                             "_default": [],
                             "_updater": "set",
                             "_emit": True,
-                        }
-                    }
-                },
+                        }}},
                 "particles": {
                     "*": {
                         "type_name": {
@@ -53,11 +55,7 @@ class FilamentToMonomer(Deriver):
                             "_default": [],
                             "_updater": "set",
                             "_emit": True,
-                        },
-                    },
-                },
-            }
-        }
+                        }}}}}
 
     def next_update(self, timestep, states):
         filament_data = states["filaments"]
@@ -82,7 +80,7 @@ class FilamentToMonomer(Deriver):
             add_topologies.append({
                 "key": fiber_id,
                 "state": {
-                    "type_name": fiber_monomers["topologies"][fiber_id]["type"],
+                    "type_name": fiber_monomers["topologies"][fiber_id]["type_name"],
                     "particle_ids": particle_ids,
                 },
             })
