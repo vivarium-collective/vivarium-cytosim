@@ -11,6 +11,7 @@ from vivarium.plots.simulation_output import plot_simulation_output
 
 from tqdm import tqdm
 from simularium_models_util.actin import ActinSimulation, ActinUtil, ActinTestData
+from simularium_models_util import ReaddyUtil
 
 
 NAME = "ReaDDy_actin"
@@ -182,53 +183,10 @@ class ReaddyActinProcess(Process):
                 observe(t)
         self.readdy_simulation._run_custom_loop(loop)
 
-    @staticmethod
-    def get_readdy_particle_edges(readdy_topologies):
-        """
-        get all the edges in the ReaDDy topologies
-        as (particle1 id, particle2 id)
-        """
-        result = []
-        for top in readdy_topologies:
-            for v1, v2 in top.graph.edges:
-                p1_id = top.particle_id_of_vertex(v1)
-                p2_id = top.particle_id_of_vertex(v2)
-                if p1_id <= p2_id:
-                    result.append((p1_id, p2_id))
-        return result
-
-    @staticmethod
-    def get_monomers_from_readdy(readdy_topologies):
-        """
-        get data for topologies of particles from ReaDDy topologies
-        """
-        edges = ReaddyActinProcess.get_readdy_particle_edges(readdy_topologies)
-        result = {
-            "topologies": {},
-            "particles": {},
-        }
-        for index, topology in enumerate(readdy_topologies):
-            particle_ids = []
-            for p in topology.particles:
-                particle_ids.append(p.id)
-                neighbor_ids = []
-                for edge in edges:
-                    if p.id == edge[0]:
-                        neighbor_ids.append(edge[1])
-                    elif p.id == edge[1]:
-                        neighbor_ids.append(edge[0])
-                result["particles"][p.id] = {
-                    "type_name": p.type,
-                    "position": p.pos,
-                    "neighbor_ids": neighbor_ids,
-                }
-            result["topologies"][index] = {"type_name": topology.type, "particle_ids": particle_ids}
-        return result
-
     def next_update(self, timestep, states):
         ActinUtil.add_monomers_from_data(self.readdy_simulation, states["monomers"])
         self.simulate_readdy(timestep)
-        return ReaddyActinProcess.get_monomers_from_readdy(
+        return ReaddyUtil.get_current_monomers(
             self.readdy_simulation.current_topologies
         )
 
