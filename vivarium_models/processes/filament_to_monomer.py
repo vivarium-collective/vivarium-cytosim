@@ -1,7 +1,6 @@
-import copy
 import numpy as np
 
-from vivarium.core.process import Deriver, Process
+from vivarium.core.process import Deriver
 from vivarium.core.engine import Engine, pf
 from simularium_models_util.actin import ActinGenerator, ActinTestData, FiberData
 

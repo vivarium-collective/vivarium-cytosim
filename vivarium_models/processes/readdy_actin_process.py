@@ -3,11 +3,7 @@ import numpy as np
 
 from vivarium.core.process import Process
 from vivarium.core.engine import Engine, pf
-from vivarium.core.composition import (
-    simulate_process,
-    PROCESS_OUT_DIR,
-)
-from vivarium.plots.simulation_output import plot_simulation_output
+from vivarium.core.composition import simulate_process
 
 from tqdm import tqdm
 from simularium_models_util.actin import ActinSimulation, ActinUtil, ActinTestData
