@@ -1,4 +1,3 @@
-import os
 import numpy as np
 
 from vivarium.core.process import Process
@@ -8,9 +7,92 @@ from vivarium.core.composition import simulate_process
 from tqdm import tqdm
 from simularium_models_util.actin import ActinSimulation, ActinUtil, ActinTestData
 from simularium_models_util import ReaddyUtil
+from vivarium_models.util import create_monomer_update
 
 
 NAME = "ReaDDy_actin"
+
+test_monomer_data = {
+    "monomers": {
+        "topologies": {
+            1: {
+                "type_name": "Arp23-Dimer",
+                "particle_ids": [1, 2],
+            },
+            0: {
+                "type_name": "Actin-Monomer",
+                "particle_ids": [0],
+            },
+        },
+        "particles": {
+            0: {
+                "type_name": "actin#free_ATP",
+                "position": np.array([2, 0, 0]),
+                "neighbor_ids": [],
+            },
+            1: {
+                "type_name": "arp2",
+                "position": np.array([0, 0, 0]),
+                "neighbor_ids": [2],
+            },
+            2: {
+                "type_name": "arp3#ATP",
+                "position": np.array([0, 0, 4]),
+                "neighbor_ids": [1],
+            },
+        },
+    }
+}
+
+
+def get_current_particle_edges(current_topologies):
+    """
+    During a running simulation,
+    get all the edges in the ReaDDy topologies
+    as (particle1 id, particle2 id)
+    from readdy.simulation.current_topologies
+    """
+    result = []
+    for top in current_topologies:
+        for v1, v2 in top.graph.edges:
+            p1_id = top.particle_id_of_vertex(v1)
+            p2_id = top.particle_id_of_vertex(v2)
+            if p1_id <= p2_id:
+                result.append((p1_id, p2_id))
+    return result
+
+
+def get_current_monomers(current_topologies):
+    """
+    During a running simulation,
+    get data for topologies of particles
+    from readdy.simulation.current_topologies
+    """
+    edges = ReaddyUtil.get_current_particle_edges(current_topologies)
+    result = {
+        "topologies": {},
+        "particles": {},
+    }
+    for index, topology in enumerate(current_topologies):
+        particle_ids = []
+        for p in topology.particles:
+            particle_ids.append(p.id)
+            neighbor_ids = []
+            for edge in edges:
+                if p.id == edge[0]:
+                    neighbor_ids.append(edge[1])
+                elif p.id == edge[1]:
+                    neighbor_ids.append(edge[0])
+            result["particles"][p.id] = {
+                "type_name": p.type,
+                "position": p.pos,
+                "neighbor_ids": neighbor_ids,
+            }
+        result["topologies"][index] = {
+            "type_name": topology.type,
+            "particle_ids": particle_ids,
+        }
+    return result
 
 
 class ReaddyActinProcess(Process):
@@ -95,7 +177,9 @@ class ReaddyActinProcess(Process):
                             "_default": [],
                             "_updater": "set",
                             "_emit": True,
-                        }}},
+                        },
+                    }
+                },
                 "particles": {
                     "*": {
                         "type_name": {
@@ -112,43 +196,21 @@ class ReaddyActinProcess(Process):
                             "_default": [],
                             "_updater": "set",
                             "_emit": True,
-                        }}}}}
+                        },
+                    }
+                },
+            }
+        }
 
     def initial_state(self, config=None):
         # TODO: make this more general
-        return {
-            "monomers": {
-                "topologies": {
-                    0: {
-                        "type_name": "Actin-Monomer",
-                        "particle_ids": [0],
-                    },
-                    1: {
-                        "type_name": "Arp23-Dimer",
-                        "particle_ids": [1, 2],
-                    },
-                },
-                "particles": {
-                    0: {
-                        "type_name": "actin#free_ATP",
-                        "position": np.array([2, 0, 0]),
-                        "neighbor_ids": [],
-                    },
-                    1: {
-                        "type_name": "arp2",
-                        "position": np.array([0, 0, 0]),
-                        "neighbor_ids": [2],
-                    },
-                    2: {
-                        "type_name": "arp3#ATP",
-                        "position": np.array([0, 0, 4]),
-                        "neighbor_ids": [1],
-                    }}}}
+        return test_monomer_data
 
     def simulate_readdy(self, timestep):
         """
         Simulate in ReaDDy for the given timestep
         """
+
         def loop():
             readdy_actions = self.readdy_simulation._actions
             init = readdy_actions.initialize_kernel()
@@ -177,14 +239,16 @@ class ReaddyActinProcess(Process):
                 update_nl()
                 calculate_forces()
                 observe(t)
+
         self.readdy_simulation._run_custom_loop(loop)
 
     def next_update(self, timestep, states):
         ActinUtil.add_monomers_from_data(self.readdy_simulation, states["monomers"])
         self.simulate_readdy(timestep)
-        return ReaddyUtil.get_current_monomers(
+        readdy_monomers = get_current_monomers(
             self.readdy_simulation.current_topologies
         )
+        return create_monomer_update(states["monomers"], readdy_monomers)
 
     # functions to configure and run the process
     def run_readdy_actin_process():
@@ -200,7 +264,7 @@ class ReaddyActinProcess(Process):
         # run the simulation
         sim_settings = {
             "total_time": 0.000000005,  # 50 steps
-            "initial_state": readdy_actin_process.initial_state(),
+            "initial_state": test_monomer_data,
         }
         output = simulate_process(readdy_actin_process, sim_settings)
         return output
@@ -210,16 +274,15 @@ def test_readdy_actin_process():
     monomer_data = ActinTestData.linear_actin_monomers()
     readdy_actin_process = ReaddyActinProcess()
 
-    engine = Engine({
-        "processes": {
-            "readdy_actin_process": readdy_actin_process},
-        "topology": {
-            "readdy_actin_process": {
-                "monomers": ("monomers",)}},
-        "initial_state": {
-            "monomers": monomer_data}})
+    engine = Engine(
+        {
+            "processes": {"readdy_actin_process": readdy_actin_process},
+            "topology": {"readdy_actin_process": {"monomers": ("monomers",)}},
+            "initial_state": {"monomers": monomer_data},
+        }
+    )
 
-    engine.update(0.0000001) # 1e3 steps
+    engine.update(0.0000001)  # 1e3 steps
 
     output = engine.emitter.get_data()
     print(pf(output))
