@@ -44,6 +44,8 @@ class VisualizeFilament(Deriver):
     def next_update(self, timestep, states):
         filaments = states["filaments"]
 
+        box_size = 150.0
+        actin_radius = 3.0
         n_agents = 0
         unique_ids = []
         type_names = []
@@ -56,9 +58,11 @@ class VisualizeFilament(Deriver):
             n_subpoints.append(len(filament["points"]))
             subpoints.append(filament["points"])
             n_agents += 1
+        subpoints = np.array([subpoints], dtype=float)
 
-        box_size = 150.0
-        actin_radius = 3.0
+        # HACK around a Simularium Viewer bug
+        subpoints[0][0][1][2] += 0.001
+
         simularium_json = TrajectoryConverter(
             TrajectoryData(
                 meta_data=MetaData(
@@ -73,7 +77,7 @@ class VisualizeFilament(Deriver):
                     positions=np.zeros((1, n_agents, 3)),
                     radii=actin_radius * np.ones((1, n_agents)),
                     n_subpoints=np.array([n_subpoints]),
-                    subpoints=np.array([subpoints]),
+                    subpoints=subpoints,
                 ),
                 time_units=UnitData("ns"),  # nanoseconds
                 spatial_units=UnitData("nm"),  # nanometers
