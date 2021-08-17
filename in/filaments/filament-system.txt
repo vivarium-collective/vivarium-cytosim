@@ -27,11 +27,11 @@ BOUNDARYDIAMETER:
 
 ### 2. Set total running time 
 
-RUNTIME:                     {{timestep}}
+RUNTIME:                     1.0
 
 ### 3. Output simulation results every SNAPSHOTTIME
 
-SNAPSHOTTIME:                {{timestep}}
+SNAPSHOTTIME:                1.0
 
 ### 4. Set chemistry input file name
 
@@ -49,7 +49,7 @@ FILAMENTTYPE:                0
 
 # Option 2: Initialize by setting input filament file
 
-FILAMENTFILE:                {{filament_file}}
+FILAMENTFILE:                filaments.txt
 
 
 ####################################################

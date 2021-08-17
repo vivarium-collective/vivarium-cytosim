@@ -1,8 +1,10 @@
 import os
+import numpy as np
 
+from vivarium.core.engine import pf
 from vivarium.core.process import Process
 from vivarium.core.composition import (
-    # simulate_process,
+    simulate_process,
     PROCESS_OUT_DIR,
 )
 from vivarium.plots.simulation_output import plot_simulation_output
@@ -39,6 +41,7 @@ class MedyanProcess(Process):
         "system_template": "filament-system.txt",
         "system_file": "filament-system.txt",
         "filament_file": "filaments.txt",
+        "medyan_executable": "medyan",
     }
 
     def __init__(self, parameters=None):
@@ -63,17 +66,18 @@ class MedyanProcess(Process):
         }
 
     def initial_state(self, config):
-        initial_state = {
-            unique_id: {"type_name": "", "points": points}
-            for unique_id, points in config.get("points", {}).items()
+        initial_filaments = {
+            unique_id: {"type_name": "A", "points": points}
+            for unique_id, points in config.get("filaments", {}).items()
         }
-        return initial_state
+        return {
+            'filaments': initial_filaments}
 
     def next_update(self, timestep, state):
         initial_filaments = state["filaments"]
 
         filament_lines = [
-            filament_to_string(filament["type"], filament["points"])
+            filament_to_string(filament["type_name"], filament["points"])
             for filament in initial_filaments.values()
         ]
 
@@ -87,7 +91,9 @@ class MedyanProcess(Process):
 
         system_template = self.parameters["system_template"]
         template = env.get_template(system_template)
-        system_text = template.render(filament_file=filament_path)
+        system_text = template.render(
+            filament_file=self.parameters['filament_file'],
+            timestep=timestep)
 
         system_path = input_directory / self.parameters["system_file"]
         with open(system_path, "w") as system_file:
@@ -96,12 +102,14 @@ class MedyanProcess(Process):
         medyan_command = [
             self.parameters["medyan_executable"],
             "-s",
-            system_file,
+            system_file.name,
             "-i",
-            input_directory,
+            str(input_directory),
             "-o",
             self.parameters["output_directory"],
         ]
+
+        import ipdb; ipdb.set_trace()
 
         medyan_process = subprocess.Popen(medyan_command, stdout=subprocess.PIPE)
         output, error = medyan_process.communicate()
@@ -114,7 +122,19 @@ def main():
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    output = MedyanProcess.next_update()
+    medyan = MedyanProcess({
+        'medyan_executable': '/home/youdonotexist/Downloads/medyan-4.2.0/build/medyan'})
+    initial_state = {
+        'filaments': {
+            '1': {
+                'type_name': 'A',
+                'points': [
+                    np.array([-70, 0, 0]),
+                    np.array([10, 0, 0])]}}}
+
+    output = simulate_process(medyan, {
+        'initial_state': initial_state,
+        'total_time': 10})
 
     # plot the simulation output
     plot_settings = {}
