@@ -4,20 +4,49 @@
 [![Documentation](https://github.com/allen-cell-animated/vivarium_models/workflows/Documentation/badge.svg)](https://allen-cell-animated.github.io/vivarium_models/)
 [![Code Coverage](https://codecov.io/gh/allen-cell-animated/vivarium_models/branch/main/graph/badge.svg)](https://codecov.io/gh/allen-cell-animated/vivarium_models)
 
-Simularium prototypes of connecting models in Vivarium
+Connecting Simularium prototypes together using Vivarium
 
 ---
 
-## Installation
+## Installation with pyenv + conda
+
+To see all pyenv versions:
+
+```
+pyenv install list
+```
+
+To install a particular version of python (or conda):
+
+```
+pyenv install anaconda3-5.3.1
+```
+
+Install dependencies using pyenv + conda:
+
+```
+pyenv local anaconda3-5.3.1 # or whatever version you have installed
+pyenv virtualenv vivarium-models
+pyenv local vivarium-models
+conda env update -f env.yml
+```
+
+# Installation with conda alone
 
 Install conda: https://docs.conda.io/en/latest/miniconda.html
 
-Using conda, you can run `conda env create -f env.yml`, which will create a conda environment called `vivarium_models` with all the required dependencies (including ReaDDy) installed.
+Using conda, you can run
+
+```
+conda env create -f env.yml
+```
+
+which will create a conda environment called `vivarium-models` with all the required dependencies (including ReaDDy) installed.
 
 To update:
 
 ```
-
+conda env update -f env.yml
 ```
 
 ### MEDYAN
