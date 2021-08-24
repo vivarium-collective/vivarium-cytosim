@@ -42,6 +42,7 @@ class MedyanProcess(Process):
         "system_file": "filament-system.txt",
         "filament_file": "filaments.txt",
         "medyan_executable": "medyan",
+        "tranform_bounds": np.array([0, 0, 0]),
     }
 
     def __init__(self, parameters=None):
@@ -73,11 +74,27 @@ class MedyanProcess(Process):
         return {
             'filaments': initial_filaments}
 
+    def transform_points(self, points):
+        return [
+            self.parameters['transform_points'] + point
+            for point in points]
+
+    def read_snapshot(self, snapshot_path):
+        with open(snapshot_path, "r") as snapshot:
+            snapshot_lines = snapshot.read().split("\n")
+
+        for line in snapshot_lines:
+            if "FILAMENT" in line:
+                # TODO: parse line and pull out filament id and type
+                filament_id = line
+
     def next_update(self, timestep, state):
         initial_filaments = state["filaments"]
 
         filament_lines = [
-            filament_to_string(filament["type_name"], filament["points"])
+            filament_to_string(
+                filament["type_name"],
+                self.transform_points(filament["points"]))
             for filament in initial_filaments.values()
         ]
 
@@ -114,6 +131,13 @@ class MedyanProcess(Process):
         medyan_process = subprocess.Popen(medyan_command, stdout=subprocess.PIPE)
         output, error = medyan_process.communicate()
 
+        # TODO: perform the reverse transform for output points
+
+        output_directory = Path(self.parameters['output_directory'])
+        snapshot = self.read_snapshot(
+            output_directory / "snapshot.traj")
+
+
 
 def main():
     """Simulate the process and plot results."""
@@ -123,7 +147,8 @@ def main():
         os.makedirs(out_dir)
 
     medyan = MedyanProcess({
-        'medyan_executable': '/home/youdonotexist/Downloads/medyan-4.2.0/build/medyan'})
+        'medyan_executable': '/home/youdonotexist/Downloads/medyan-4.2.0/build/medyan',
+        'transform_points': [500, 500, 500]})
     initial_state = {
         'filaments': {
             '1': {
