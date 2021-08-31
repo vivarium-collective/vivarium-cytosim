@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from vivarium.core.engine import pf
+from vivarium.core.engine import pf, pp
 from vivarium.core.process import Process
 from vivarium.core.composition import (
     simulate_process,
@@ -27,6 +27,24 @@ def filament_to_string(type, points):
     line = " ".join(["FILAMENT", str(type), begin, end])
     return line
 
+def read_coordinates(coordinates_line):
+    coordinate_strs = coordinates_line.split(' ')
+    coordinates = []
+    for n in range(0, len(coordinate_strs), 3):
+        point = coordinate_strs[n:n+3]
+        coordinates.append(np.array([
+            int(p)
+            for p in point]))
+    return coordinates
+
+def read_filament(filament_line, coordinates_line):
+    _, id, type, length, delta_l, delta_r = filament_line.split(' ')
+    coordinates = read_coordinates(coordinates_line)
+    return {
+        id: {
+            'type_name': type,
+            'points': coordinates}}
+
 
 class MedyanProcess(Process):
     """
@@ -43,10 +61,12 @@ class MedyanProcess(Process):
         "filament_file": "filaments.txt",
         "medyan_executable": "medyan",
         "tranform_bounds": np.array([0, 0, 0]),
+        # TODO: provide a way to parameterize type name,
+        #    translating between simulation type names and MEDYAN type indexes
     }
 
     def __init__(self, parameters=None):
-        super(MedyanProcess, self).__init__(parameters)
+        super().__init__(parameters)
 
     def ports_schema(self):
         return {
@@ -74,22 +94,47 @@ class MedyanProcess(Process):
         return {
             'filaments': initial_filaments}
 
-    def transform_points(self, points):
+    def transform_points(self, points, inverse=False):
+        transform = np.array(self.parameters['transform_points'])
+        if inverse:
+            transform = -transform
         return [
-            self.parameters['transform_points'] + point
+            transform + point
             for point in points]
 
+    def transform_filament(self, filament, inverse=False):
+        filament['points'] = self.transform_points(filament['points'], inverse)
+        return filament
+
     def read_snapshot(self, snapshot_path):
+        # TODO: read only the last timepoint for each filament
+
         with open(snapshot_path, "r") as snapshot:
             snapshot_lines = snapshot.read().split("\n")
 
-        for line in snapshot_lines:
+        index = 0
+        filaments = {}
+        while index < len(snapshot_lines):
+            line = snapshot_lines[index]
             if "FILAMENT" in line:
                 # TODO: parse line and pull out filament id and type
-                filament_id = line
+                coordinates_line = snapshot_lines[index + 1]
+                filament = read_filament(line, coordinates_line)
+                filaments.update(filament)
+                index += 2
+            else:
+                index += 1
+
+        return filaments
 
     def next_update(self, timestep, state):
         initial_filaments = state["filaments"]
+        filament_ids = list(initial_filaments.keys())
+
+        filament_types = set()
+        for filament in initial_filaments.values():
+            filament_types.add(filament['type_name'])
+        num_filament_types = len(filament_types)
 
         filament_lines = [
             filament_to_string(
@@ -110,6 +155,7 @@ class MedyanProcess(Process):
         template = env.get_template(system_template)
         system_text = template.render(
             filament_file=self.parameters['filament_file'],
+            num_filament_types=num_filament_types,
             timestep=timestep)
 
         system_path = input_directory / self.parameters["system_file"]
@@ -126,16 +172,26 @@ class MedyanProcess(Process):
             self.parameters["output_directory"],
         ]
 
-        import ipdb; ipdb.set_trace()
-
         medyan_process = subprocess.Popen(medyan_command, stdout=subprocess.PIPE)
         output, error = medyan_process.communicate()
+
+        print(output.decode('utf-8'))
 
         # TODO: perform the reverse transform for output points
 
         output_directory = Path(self.parameters['output_directory'])
-        snapshot = self.read_snapshot(
+        filaments = self.read_snapshot(
             output_directory / "snapshot.traj")
+
+        filaments = {
+            filament_ids[int(id)]: self.transform_filament(filament, inverse=True)
+            for id, filament in filaments.items()}
+
+        import ipdb; ipdb.set_trace()
+
+        return {
+            'filaments': filaments}
+        
 
 
 
@@ -148,18 +204,27 @@ def main():
 
     medyan = MedyanProcess({
         'medyan_executable': '/home/youdonotexist/Downloads/medyan-4.2.0/build/medyan',
-        'transform_points': [500, 500, 500]})
+        'transform_points': [500, 500, 500],
+        'time_step': 10})
     initial_state = {
         'filaments': {
             '1': {
-                'type_name': 'A',
+                'type_name': '0', # 'A',
                 'points': [
                     np.array([-70, 0, 0]),
-                    np.array([10, 0, 0])]}}}
+                    np.array([10, 0, 0])]},
+            '2': {
+                'type_name': '0', # 'B',
+                'points': [
+                    np.array([-70, 100, 100]),
+                    np.array([10, 100, 100])]}}}
 
     output = simulate_process(medyan, {
         'initial_state': initial_state,
-        'total_time': 10})
+        'total_time': 100,
+        'return_raw_data': True})
+
+    import ipdb; ipdb.set_trace()
 
     # plot the simulation output
     plot_settings = {}

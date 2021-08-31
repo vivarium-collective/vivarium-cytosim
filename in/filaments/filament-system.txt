@@ -27,11 +27,11 @@ BOUNDARYDIAMETER:
 
 ### 2. Set total running time 
 
-RUNTIME:                     1.0
+RUNTIME:                     10.0
 
 ### 3. Output simulation results every SNAPSHOTTIME
 
-SNAPSHOTTIME:                1.0
+SNAPSHOTTIME:                10.0
 
 ### 4. Set chemistry input file name
 
@@ -193,6 +193,7 @@ NUMBINDINGSITES:               4
 # I.e. actin filament, microtubule, intermediate filament
 
 NUMFILAMENTTYPES:              1
+NUMFILAMENTSPECIES:            1
 
 ### 5. The compartment size
 # Based on Kuramoto length, see Popov et al., PLoS Comp Biol, 2016 
