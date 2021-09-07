@@ -1,59 +1,39 @@
-##########################################################################
-### Important notes: 
-### 1. This sample file includes](1) linker (un)binding, 
-###    (2) motor (un)binding and motor walking, 
-### 2. Based on alpha-actinin, non-muscle myosin II 
-### 3. The unit for reaction rates or diffusion rates is 1/s
-### 4. The unit for concentration is the number of molecule (copy number)
-##########################################################################
 
-##################################################
-### PART I: Define species
-##################################################
+############################ SPECIES ###########################
 
-### 1. Diffusing species 
-# 1uM molecules = 602 copy number per um^3 
-# SPECIESDIFFUSING:<name> <copy#> <diffusion rate> <release time> <removal time> REG 
+SPECIESDIFFUSING: AD 1000 80.0 0.0 0.0 REG
 
-SPECIESDIFFUSING: A 0 80.0 0.0 0.0 REG
-SPECIESDIFFUSING: MD 1 0.8 0.0 0.0 REG
-SPECIESDIFFUSING: LD 50 8.0 0.0 0.0 REG
+SPECIESDIFFUSING: MD 0 0.8 10.0 0.0 REG
+SPECIESDIFFUSING: LD 0 8.0 0.0 0.0 REG
 
-### 2. Filament species
+SPECIESFILAMENT: FA 0
 
-SPECIESFILAMENT:     AF 0
-SPECIESPLUSEND:      PA 0
-SPECIESMINUSEND:     MA 0
+SPECIESPLUSEND: PA 0
 
-### 3. Binding species and binding sites
-# Changes not recommended
+SPECIESMINUSEND: MA 0
 
-# For motor
-SPECIESMOTOR:        MOA 0
-SPECIESBOUND:        MEA 0
-MOTORBINDINGSITE:    MEA 0
+SPECIESBOUND: LEA 0 
+SPECIESBOUND: MEA 0
 
-# For linker
-SPECIESLINKER:       LA 0
-SPECIESBOUND:        LEA 0 
-LINKERBINDINGSITE:   LEA 0 
+SPECIESMOTOR: MOA 0
+SPECIESLINKER: LA 0
 
-# For branching
-SPECIESBRANCHER:     BA 0
-SPECIESBOUND:        BEA 0
-BRANCHERBINDINGSITE: BEA 0
+LINKERBINDINGSITE: LEA 0 
+MOTORBINDINGSITE: MEA 0
 
-##################################################
-### PART II: Define Reactions
-##################################################
+########################### REACTIONS ##########################
 
-### 1. Linker (un)binding
-# Wachsstock, et al, Biophys J, 1993
- 
-LINKERREACTION: 0 LEA:BOUND:1 + LEA:BOUND:2 + LD:DIFFUSING <-> LA:LINKER:1 + LA:LINKER:2 0.01 0.3 30.0 40.0
+#Normal polymerization
+POLYMERIZATIONREACTION: 0 AD:DIFFUSING + PA:PLUSEND -> FA:FILAMENT + PA:PLUSEND 0.151
+POLYMERIZATIONREACTION: 0 AD:DIFFUSING + MA:MINUSEND -> FA:FILAMENT + MA:MINUSEND 0.017
 
-### 2. Motor (un)binding and walking
-# Stam et al, Biophys J, 2015
+#Normal depolymerization
+DEPOLYMERIZATIONREACTION: 0 FA:FILAMENT + PA:PLUSEND -> AD:DIFFUSING + PA:PLUSEND 1.4
+DEPOLYMERIZATIONREACTION: 0 FA:FILAMENT + MA:MINUSEND -> AD:DIFFUSING + MA:MINUSEND 0.8
 
-MOTORREACTION: 0 MEA:BOUND:1 + MEA:BOUND:2 + MD:DIFFUSING <-> MOA:MOTOR:1 + MOA:MOTOR:2 0.2 0.35 175.0 225.0
+#Motor and linker binding and unbinding
+MOTORREACTION: 0 MEA:BOUND:1 + MEA:BOUND:2 + MD:DIFFUSING <-> MOA:MOTOR:1 + MOA:MOTOR:2 0.2 1.7 175.0 225.0
+LINKERREACTION: 0 LEA:BOUND:1 + LEA:BOUND:2 + LD:DIFFUSING <-> LA:LINKER:1 + LA:LINKER:2 0.009 0.3 30.0 40.0
+
+#Motor walking
 MOTORWALKINGREACTION: 0 MOA:MOTOR:N + MEA:BOUND:N+1 -> MOA:MOTOR:N+1 + MEA:BOUND:N 0.2

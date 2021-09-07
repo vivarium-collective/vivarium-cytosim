@@ -31,7 +31,7 @@ RUNTIME:                     {{timestep}}
 
 ### 3. Output simulation results every SNAPSHOTTIME
 
-SNAPSHOTTIME:                {{timestep}}
+SNAPSHOTTIME:                {{snapshot_time}}
 
 ### 4. Set chemistry input file name
 

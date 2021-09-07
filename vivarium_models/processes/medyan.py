@@ -22,9 +22,10 @@ NAME = "MEDYAN"
 
 
 def filament_to_string(type, points):
-    begin = " ".join([str(element) for element in points[0]])
-    end = " ".join([str(element) for element in points[-1]])
-    line = " ".join(["FILAMENT", str(type), begin, end])
+    point_strs = [
+        " ".join([str(element) for element in point])
+        for point in points]
+    line = " ".join(["FILAMENT", str(type)] + point_strs)
     return line
 
 def read_coordinates(coordinates_line):
@@ -33,7 +34,7 @@ def read_coordinates(coordinates_line):
     for n in range(0, len(coordinate_strs), 3):
         point = coordinate_strs[n:n+3]
         coordinates.append(np.array([
-            int(p)
+            float(p)
             for p in point]))
     return coordinates
 
@@ -60,6 +61,7 @@ class MedyanProcess(Process):
         "system_file": "filament-system.txt",
         "filament_file": "filaments.txt",
         "medyan_executable": "medyan",
+        "snapshot": 1.0,
         "tranform_bounds": np.array([0, 0, 0]),
         # TODO: provide a way to parameterize type name,
         #    translating between simulation type names and MEDYAN type indexes
@@ -156,7 +158,8 @@ class MedyanProcess(Process):
         system_text = template.render(
             filament_file=self.parameters['filament_file'],
             num_filament_types=num_filament_types,
-            timestep=timestep)
+            timestep=timestep,
+            snapshot_time=self.parameters['snapshot'])
 
         system_path = input_directory / self.parameters["system_file"]
         with open(system_path, "w") as system_file:
@@ -187,8 +190,6 @@ class MedyanProcess(Process):
             filament_ids[int(id)]: self.transform_filament(filament, inverse=True)
             for id, filament in filaments.items()}
 
-        import ipdb; ipdb.set_trace()
-
         return {
             'filaments': filaments}
         
@@ -205,19 +206,19 @@ def main():
     medyan = MedyanProcess({
         'medyan_executable': '/home/youdonotexist/Downloads/medyan-4.2.0/build/medyan',
         'transform_points': [500, 500, 500],
-        'time_step': 10})
+        'time_step': 10.0})
     initial_state = {
         'filaments': {
             '1': {
                 'type_name': '0', # 'A',
                 'points': [
-                    np.array([-70, 0, 0]),
-                    np.array([10, 0, 0])]},
+                    np.array([-70.0, 0.0, 100.0]),
+                    np.array([10.0, 100.0, 0.0])]},
             '2': {
                 'type_name': '0', # 'B',
                 'points': [
-                    np.array([-70, 100, 100]),
-                    np.array([10, 100, 100])]}}}
+                    np.array([-70.0, 100.0, 0.0]),
+                    np.array([10.0, 0.0, 100.0])]}}}
 
     output = simulate_process(medyan, {
         'initial_state': initial_state,

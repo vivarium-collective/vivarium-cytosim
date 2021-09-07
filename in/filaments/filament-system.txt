@@ -31,7 +31,7 @@ RUNTIME:                     10.0
 
 ### 3. Output simulation results every SNAPSHOTTIME
 
-SNAPSHOTTIME:                10.0
+SNAPSHOTTIME:                1.0
 
 ### 4. Set chemistry input file name
 
