@@ -27,7 +27,7 @@ BOUNDARYDIAMETER:
 
 ### 2. Set total running time 
 
-RUNTIME:                     10.0
+RUNTIME:                     1.0
 
 ### 3. Output simulation results every SNAPSHOTTIME
 
@@ -49,7 +49,7 @@ FILAMENTTYPE:                0
 
 # Option 2: Initialize by setting input filament file
 
-FILAMENTFILE:                filaments.txt
+FILAMENTFILE:                
 
 
 ####################################################
@@ -192,8 +192,8 @@ NUMBINDINGSITES:               4
 ### 4. The number of filament type
 # I.e. actin filament, microtubule, intermediate filament
 
-NUMFILAMENTTYPES:              1
-NUMFILAMENTSPECIES:            1
+NUMFILAMENTTYPES:              
+NUMFILAMENTSPECIES:            
 
 ### 5. The compartment size
 # Based on Kuramoto length, see Popov et al., PLoS Comp Biol, 2016 

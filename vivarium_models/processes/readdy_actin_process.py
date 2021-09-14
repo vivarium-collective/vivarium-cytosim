@@ -56,7 +56,8 @@ class ReaddyActinProcess(Process):
     defaults = {
         "name": "actin",
         "total_steps": 1e3,
-        "timestep": 0.1,
+        "time_step": 0.0000001,
+        "internal_timestep": 0.1,
         "box_size": 150.0,  # nm
         "temperature_C": 22.0,  # from Pollard experiments
         "viscosity": 8.1,  # cP, viscosity in cytoplasm
@@ -165,7 +166,7 @@ class ReaddyActinProcess(Process):
             readdy_actions = self.readdy_simulation._actions
             init = readdy_actions.initialize_kernel()
             diffuse = readdy_actions.integrator_euler_brownian_dynamics(
-                self.parameters["timestep"]
+                self.parameters["internal_timestep"]
             )
             calculate_forces = readdy_actions.calculate_forces()
             create_nl = readdy_actions.create_neighbor_list(
@@ -173,7 +174,7 @@ class ReaddyActinProcess(Process):
             )
             update_nl = readdy_actions.update_neighbor_list()
             react = readdy_actions.reaction_handler_uncontrolled_approximation(
-                self.parameters["timestep"]
+                self.parameters["internal_timestep"]
             )
             observe = readdy_actions.evaluate_observables()
             init()
@@ -181,7 +182,7 @@ class ReaddyActinProcess(Process):
             calculate_forces()
             update_nl()
             observe(0)
-            n_steps = int(timestep * 1e9 / self.parameters["timestep"])
+            n_steps = int(timestep * 1e9 / self.parameters["internal_timestep"])
             for t in tqdm(range(1, n_steps + 1)):
                 diffuse()
                 update_nl()

@@ -29,17 +29,17 @@ def get_actin_monomer_positions(
         result = []
     start_actin = particles[start_actin_id]
     result.append(start_actin["position"])
-    next_actin_id = MonomerToFilament.get_next_actin_id(
+    next_actin_id = MonomerToFiber.get_next_actin_id(
         prev_actin_id, start_actin["neighbor_ids"]
     )
     if next_actin_id < 0:
         return result
-    return MonomerToFilament.get_actin_monomer_positions(
+    return MonomerToFiber.get_actin_monomer_positions(
         next_actin_id, particles, box_size, start_actin_id, result
     )
 
 
-def get_filament_end_point(end_direction, positions, box_size):
+def get_fiber_end_point(end_direction, positions, box_size):
     """
     Since we can only calculate axis position
     given a neighbor in each direction,
@@ -55,25 +55,25 @@ def get_filament_end_point(end_direction, positions, box_size):
     return axis_pos1 - 1.5 * (axis_pos2 - axis_pos1)
 
 
-def get_filament(topology_id, pointed_actin_id, monomers, box_size):
+def get_fiber(topology_id, pointed_actin_id, monomers, box_size):
     """
-    Get data for a filament from a chain of particles
+    Get data for a fiber from a chain of particles
     """
-    positions = MonomerToFilament.get_actin_monomer_positions(
+    positions = MonomerToFiber.get_actin_monomer_positions(
         pointed_actin_id, monomers["particles"], box_size
     )
     return {
         "type_name": monomers["topologies"][topology_id]["type_name"],
         "points": [
-            MonomerToFilament.get_filament_end_point(-1, positions, box_size),
-            MonomerToFilament.get_filament_end_point(1, positions, box_size),
+            MonomerToFiber.get_fiber_end_point(-1, positions, box_size),
+            MonomerToFiber.get_fiber_end_point(1, positions, box_size),
         ],
     }
 
 
-def generate_filaments_from_monomers(monomers, box_size=150.0):
+def generate_fibers_from_monomers(monomers, box_size=150.0):
     """
-    Transform monomer data into filament data
+    Transform monomer data into fiber data
     """
     pointed_actin_ids = {}
     for topology_id in monomers["topologies"]:
@@ -83,13 +83,13 @@ def generate_filaments_from_monomers(monomers, box_size=150.0):
                 break
     result = {}
     for topology_id in pointed_actin_ids:
-        result[topology_id] = MonomerToFilament.get_filament(
+        result[topology_id] = MonomerToFiber.get_fiber(
             topology_id, pointed_actin_ids[topology_id], monomers, box_size
         )
     return result
 
 
-class MonomerToFilament(Deriver):
+class MonomerToFiber(Deriver):
     defaults = {}
 
     def __init__(self, parameters=None):
@@ -97,7 +97,7 @@ class MonomerToFilament(Deriver):
 
     def ports_schema(self):
         return {
-            "filaments": {
+            "fibers": {
                 "*": {
                     "type_name": {
                         "_default": "",
@@ -150,44 +150,44 @@ class MonomerToFilament(Deriver):
 
     def next_update(self, timestep, states):
         monomers = states["monomers"]
-        previous_filaments = states["filaments"]
+        previous_fibers = states["fibers"]
 
-        monomer_filaments = generate_filaments_from_monomers(monomers)
+        monomer_fibers = generate_fibers_from_monomers(monomers)
 
-        filament_update = {}
-        if len(previous_filaments) > 0:
-            filament_update["_delete"] = list(previous_filaments.keys())
+        fiber_update = {}
+        if len(previous_fibers) > 0:
+            fiber_update["_delete"] = list(previous_fibers.keys())
 
-        add_filaments = []
-        for filament_id in monomer_filaments:
-            add_filaments.append(
+        add_fibers = []
+        for fiber_id in monomer_fibers:
+            add_fibers.append(
                 {
-                    "key": filament_id,
+                    "key": fiber_id,
                     "state": {
-                        "type_name": monomer_filaments[filament_id]["type_name"],
-                        "points": monomer_filaments[filament_id]["points"],
+                        "type_name": monomer_fibers[fiber_id]["type_name"],
+                        "points": monomer_fibers[fiber_id]["points"],
                     },
                 }
             )
-        filament_update["_add"] = add_filaments
+        fiber_update["_add"] = add_fibers
 
-        return {"filaments": filament_update}
+        return {"fibers": fiber_update}
 
 
-def test_filament_to_monomer():
+def test_fiber_to_monomer():
     monomer_data = ActinTestData.linear_actin_monomers()
-    monomer_to_filament = MonomerToFilament()
+    monomer_to_fiber = MonomerToFiber()
 
     engine = Engine(
         {
-            "processes": {"monomer_to_filament": monomer_to_filament},
+            "processes": {"monomer_to_fiber": monomer_to_fiber},
             "topology": {
-                "monomer_to_filament": {
-                    "filaments": ("filaments",),
+                "monomer_to_fiber": {
+                    "fibers": ("fibers",),
                     "monomers": ("monomers",),
                 }
             },
-            "initial_state": {"filaments": {}, "monomers": monomer_data},
+            "initial_state": {"fibers": {}, "monomers": monomer_data},
         }
     )
 
@@ -198,4 +198,4 @@ def test_filament_to_monomer():
 
 
 if __name__ == "__main__":
-    test_filament_to_monomer()
+    test_fiber_to_monomer()

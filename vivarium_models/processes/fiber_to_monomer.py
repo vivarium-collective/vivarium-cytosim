@@ -7,7 +7,7 @@ from simularium_models_util.actin import ActinGenerator, ActinTestData, FiberDat
 from ..util import create_monomer_update
 
 
-class FilamentToMonomer(Deriver):
+class FiberToMonomer(Deriver):
     defaults = {}
 
     def __init__(self, parameters=None):
@@ -15,7 +15,7 @@ class FilamentToMonomer(Deriver):
 
     def ports_schema(self):
         return {
-            "filaments": {
+            "fibers": {
                 "*": {
                     "type_name": {
                         "_default": "",
@@ -67,12 +67,12 @@ class FilamentToMonomer(Deriver):
         }
 
     def next_update(self, timestep, states):
-        filament_data = states["filaments"]
+        fiber_data = states["fibers"]
         previous_monomers = states["monomers"]
 
         fibers = [
-            FiberData(fiber_id, filament_data[fiber_id]["points"])
-            for fiber_id in filament_data
+            FiberData(fiber_id, fiber_data[fiber_id]["points"])
+            for fiber_id in fiber_data
         ]
         fiber_monomers = ActinGenerator.get_monomers(fibers, 0)
         for particle_id in fiber_monomers["particles"]:
@@ -82,28 +82,28 @@ class FilamentToMonomer(Deriver):
         return create_monomer_update(previous_monomers, fiber_monomers)
 
 
-def get_initial_filament_data():
+def get_initial_fiber_data():
     fibers = ActinTestData.linear_actin_fiber()
-    filaments_dict = {}
+    fibers_dict = {}
     for fiber in fibers:
-        filaments_dict[fiber.fiber_id] = dict(fiber)
-    return filaments_dict
+        fibers_dict[fiber.fiber_id] = dict(fiber)
+    return fibers_dict
 
 
-def test_filament_to_monomer():
-    filament_data = get_initial_filament_data()
-    filament_to_monomer = FilamentToMonomer()
+def test_fiber_to_monomer():
+    fiber_data = get_initial_fiber_data()
+    fiber_to_monomer = FiberToMonomer()
 
     engine = Engine(
         {
-            "processes": {"filament_to_monomer": filament_to_monomer},
+            "processes": {"fiber_to_monomer": fiber_to_monomer},
             "topology": {
-                "filament_to_monomer": {
-                    "filaments": ("filaments",),
+                "fiber_to_monomer": {
+                    "fibers": ("fibers",),
                     "monomers": ("monomers",),
                 }
             },
-            "initial_state": {"filaments": filament_data, "monomers": {}},
+            "initial_state": {"fibers": fiber_data, "monomers": {}},
         }
     )
 
@@ -114,4 +114,4 @@ def test_filament_to_monomer():
 
 
 if __name__ == "__main__":
-    test_filament_to_monomer()
+    test_fiber_to_monomer()
