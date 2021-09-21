@@ -67,6 +67,8 @@ class FiberToMonomer(Deriver):
         }
 
     def next_update(self, timestep, states):
+        print("in fiber to monomer deriver next update")
+
         fiber_data = states["fibers"]
         previous_monomers = states["monomers"]
 
@@ -79,6 +81,9 @@ class FiberToMonomer(Deriver):
             fiber_monomers["particles"][particle_id] = dict(
                 fiber_monomers["particles"][particle_id]
             )
+
+        import ipdb; ipdb.set_trace()
+
         return create_monomer_update(previous_monomers, fiber_monomers)
 
 

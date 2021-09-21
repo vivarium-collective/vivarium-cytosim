@@ -194,11 +194,16 @@ class ReaddyActinProcess(Process):
         self.readdy_simulation._run_custom_loop(loop)
 
     def next_update(self, timestep, states):
+        print("in readdy actin process next update")
+
+        import ipdb; ipdb.set_trace()
+
         ActinUtil.add_monomers_from_data(self.readdy_simulation, states["monomers"])
         self.simulate_readdy(timestep)
         readdy_monomers = ReaddyUtil.get_current_monomers(
             self.readdy_simulation.current_topologies
         )
+
         return create_monomer_update(states["monomers"], readdy_monomers)
 
     # functions to configure and run the process

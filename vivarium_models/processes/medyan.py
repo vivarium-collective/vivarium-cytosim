@@ -130,6 +130,8 @@ class MedyanProcess(Process):
         return fibers
 
     def next_update(self, timestep, state):
+        print("in medyan process next update")
+
         initial_fibers = state["fibers"]
         fiber_ids = list(initial_fibers.keys())
 
