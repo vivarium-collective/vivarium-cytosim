@@ -4,6 +4,7 @@ from vivarium.core.process import Deriver
 from vivarium.core.engine import Engine, pf
 from simularium_models_util.actin import ActinUtil, ActinTestData
 
+from ..util import agents_update
 
 def get_next_actin_id(prev_actin_id, neighbor_ids):
     """
@@ -29,12 +30,12 @@ def get_actin_monomer_positions(
         result = []
     start_actin = particles[start_actin_id]
     result.append(start_actin["position"])
-    next_actin_id = MonomerToFiber.get_next_actin_id(
+    next_actin_id = get_next_actin_id(
         prev_actin_id, start_actin["neighbor_ids"]
     )
     if next_actin_id < 0:
         return result
-    return MonomerToFiber.get_actin_monomer_positions(
+    return get_actin_monomer_positions(
         next_actin_id, particles, box_size, start_actin_id, result
     )
 
@@ -59,14 +60,14 @@ def get_fiber(topology_id, pointed_actin_id, monomers, box_size):
     """
     Get data for a fiber from a chain of particles
     """
-    positions = MonomerToFiber.get_actin_monomer_positions(
+    positions = get_actin_monomer_positions(
         pointed_actin_id, monomers["particles"], box_size
     )
     return {
         "type_name": monomers["topologies"][topology_id]["type_name"],
         "points": [
-            MonomerToFiber.get_fiber_end_point(-1, positions, box_size),
-            MonomerToFiber.get_fiber_end_point(1, positions, box_size),
+            get_fiber_end_point(-1, positions, box_size),
+            get_fiber_end_point(1, positions, box_size),
         ],
     }
 
@@ -77,13 +78,16 @@ def generate_fibers_from_monomers(monomers, box_size=150.0):
     """
     pointed_actin_ids = {}
     for topology_id in monomers["topologies"]:
-        for particle_id in monomers["topologies"][topology_id]["particle_ids"]:
-            if "pointed" in monomers["particles"][particle_id]["type_name"]:
-                pointed_actin_ids[topology_id] = particle_id
-                break
+        # assume first element is the pointed end?
+        pointed_actin_ids[topology_id] = monomers['topologies'][topology_id]['particle_ids'][0]
+        # for particle_id in monomers["topologies"][topology_id]["particle_ids"]:
+        #     if "pointed" in monomers["particles"][particle_id]["type_name"]:
+        #         pointed_actin_ids[topology_id] = particle_id
+        #         break
+
     result = {}
     for topology_id in pointed_actin_ids:
-        result[topology_id] = MonomerToFiber.get_fiber(
+        result[topology_id] = get_fiber(
             topology_id, pointed_actin_ids[topology_id], monomers, box_size
         )
     return result
@@ -149,29 +153,36 @@ class MonomerToFiber(Deriver):
         }
 
     def next_update(self, timestep, states):
+        print('in monomer to fiber deriver next update')
+
         monomers = states["monomers"]
         previous_fibers = states["fibers"]
 
         monomer_fibers = generate_fibers_from_monomers(monomers)
 
-        fiber_update = {}
-        if len(previous_fibers) > 0:
-            fiber_update["_delete"] = list(previous_fibers.keys())
+        # fiber_update = {}
+        # if len(previous_fibers) > 0:
+        #     fiber_update["_delete"] = list(previous_fibers.keys())
 
-        add_fibers = []
-        for fiber_id in monomer_fibers:
-            add_fibers.append(
-                {
-                    "key": fiber_id,
-                    "state": {
-                        "type_name": monomer_fibers[fiber_id]["type_name"],
-                        "points": monomer_fibers[fiber_id]["points"],
-                    },
-                }
-            )
-        fiber_update["_add"] = add_fibers
+        # add_fibers = []
+        # for fiber_id in monomer_fibers:
+        #     add_fibers.append(
+        #         {
+        #             "key": fiber_id,
+        #             "state": {
+        #                 "type_name": monomer_fibers[fiber_id]["type_name"],
+        #                 "points": monomer_fibers[fiber_id]["points"],
+        #             },
+        #         }
+        #     )
+        # fiber_update["_add"] = add_fibers
 
-        return {"fibers": fiber_update}
+        fiber_update = agents_update(previous_fibers, monomer_fibers)
+
+        import ipdb; ipdb.set_trace()
+
+        return {
+            "fibers": fiber_update}
 
 
 def test_fiber_to_monomer():
