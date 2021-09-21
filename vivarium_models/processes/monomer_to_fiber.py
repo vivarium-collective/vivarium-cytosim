@@ -83,7 +83,7 @@ def generate_fibers_from_monomers(monomers, box_size=150.0):
         # for particle_id in monomers["topologies"][topology_id]["particle_ids"]:
         #     if "pointed" in monomers["particles"][particle_id]["type_name"]:
         #         pointed_actin_ids[topology_id] = particle_id
-        #         break
+                # break
 
     result = {}
     for topology_id in pointed_actin_ids:
@@ -159,23 +159,6 @@ class MonomerToFiber(Deriver):
         previous_fibers = states["fibers"]
 
         monomer_fibers = generate_fibers_from_monomers(monomers)
-
-        # fiber_update = {}
-        # if len(previous_fibers) > 0:
-        #     fiber_update["_delete"] = list(previous_fibers.keys())
-
-        # add_fibers = []
-        # for fiber_id in monomer_fibers:
-        #     add_fibers.append(
-        #         {
-        #             "key": fiber_id,
-        #             "state": {
-        #                 "type_name": monomer_fibers[fiber_id]["type_name"],
-        #                 "points": monomer_fibers[fiber_id]["points"],
-        #             },
-        #         }
-        #     )
-        # fiber_update["_add"] = add_fibers
 
         fiber_update = agents_update(previous_fibers, monomer_fibers)
 

@@ -70,6 +70,8 @@ class MedyanProcess(Process):
     def __init__(self, parameters=None):
         super().__init__(parameters)
 
+        assert self.parameters['time_step'] > self.parameters['snapshot']
+
     def ports_schema(self):
         return {
             "fibers": {
@@ -191,6 +193,8 @@ class MedyanProcess(Process):
         fibers = {
             fiber_ids[int(id)]: self.transform_fiber(fiber, inverse=True)
             for id, fiber in fibers.items()}
+
+        import ipdb; ipdb.set_trace()
 
         return {
             'fibers': fibers}

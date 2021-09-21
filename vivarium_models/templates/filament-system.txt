@@ -49,7 +49,7 @@ FILAMENTTYPE:                0
 
 # Option 2: Initialize by setting input filament file
 
-FILAMENTFILE:                {{filament_file}}
+FILAMENTFILE:                {{fiber_file}}
 
 
 ####################################################

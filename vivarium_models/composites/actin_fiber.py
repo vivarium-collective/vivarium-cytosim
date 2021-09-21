@@ -17,6 +17,7 @@ class ActinFiber(Composer):
             'time_step': READDY_TIMESTEP,
             '_condition': 'readdy_active'},
         'medyan': {
+            'time_step': 5.0,
             '_condition': 'medyan_active'},
         'fiber_to_monomer': {
             '_condition': 'medyan_active'},
