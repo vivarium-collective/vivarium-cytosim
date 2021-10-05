@@ -29,7 +29,7 @@ def fiber_to_string(type, points):
     return line
 
 def read_coordinates(coordinates_line):
-    coordinate_strs = coordinates_line.split(' ')
+    coordinate_strs = coordinates_line.strip().split(' ')
     coordinates = []
     for n in range(0, len(coordinate_strs), 3):
         point = coordinate_strs[n:n+3]
@@ -194,8 +194,6 @@ class MedyanProcess(Process):
             fiber_ids[int(id)]: self.transform_fiber(fiber, inverse=True)
             for id, fiber in fibers.items()}
 
-        import ipdb; ipdb.set_trace()
-
         return {
             'fibers': fibers}
         
@@ -230,8 +228,6 @@ def main():
         'initial_state': initial_state,
         'total_time': 100,
         'return_raw_data': True})
-
-    import ipdb; ipdb.set_trace()
 
     # plot the simulation output
     plot_settings = {}

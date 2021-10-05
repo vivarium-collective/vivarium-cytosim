@@ -3,11 +3,13 @@ import numpy as np
 from vivarium.core.composer import Composer
 from vivarium.core.engine import Engine
 from vivarium.processes.alternator import Alternator, PeriodicEvent
+from vivarium.core.registry import emitter_registry
 
 from vivarium_models.processes.readdy_actin_process import ReaddyActinProcess
 from vivarium_models.processes.medyan import MedyanProcess
 from vivarium_models.processes.monomer_to_fiber import MonomerToFiber
 from vivarium_models.processes.fiber_to_monomer import FiberToMonomer
+from vivarium_models.processes.simularium_emitter import SimulariumEmitter
 
 READDY_TIMESTEP = 0.0000001
 ALTERNATOR_PERIODS = [10.0, READDY_TIMESTEP]
@@ -100,14 +102,16 @@ def test_actin_fiber():
     composite = actin_fiber.generate()
     composite['initial_state'] = initial_state
 
+    emitter_registry.register('simularium', SimulariumEmitter)
     engine = Engine(
         processes=composite['processes'],
         topology=composite['topology'],
-        initial_state=composite['initial_state'])
+        initial_state=composite['initial_state'],
+        emitter='simularium',
+        emit_processes=True)
 
-    import ipdb; ipdb.set_trace()
-
-    engine.update(100)
+    engine.update(15)
+    engine.emitter.get_data()
 
 
 if __name__ == '__main__':

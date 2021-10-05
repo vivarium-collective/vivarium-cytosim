@@ -202,8 +202,6 @@ class ReaddyActinProcess(Process):
             self.readdy_simulation.current_topologies
         )
 
-        import ipdb; ipdb.set_trace()
-
         return create_monomer_update(states["monomers"], readdy_monomers)
 
     # functions to configure and run the process
