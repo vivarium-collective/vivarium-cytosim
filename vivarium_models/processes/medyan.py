@@ -1,7 +1,7 @@
 import os
 import numpy as np
+import argparse
 
-from vivarium.core.engine import pf, pp
 from vivarium.core.process import Process
 from vivarium.core.composition import (
     simulate_process,
@@ -22,29 +22,24 @@ NAME = "MEDYAN"
 
 
 def fiber_to_string(type_name, points):
-    point_strs = [
-        " ".join([str(element) for element in point])
-        for point in points]
+    point_strs = [" ".join([str(element) for element in point]) for point in points]
     line = " ".join(["FILAMENT", str(type_name)] + point_strs)
     return line
 
+
 def read_coordinates(coordinates_line):
-    coordinate_strs = coordinates_line.strip().split(' ')
+    coordinate_strs = coordinates_line.strip().split(" ")
     coordinates = []
     for n in range(0, len(coordinate_strs), 3):
-        point = coordinate_strs[n:n+3]
-        coordinates.append(np.array([
-            float(p)
-            for p in point]))
+        point = coordinate_strs[n : n + 3]
+        coordinates.append(np.array([float(p) for p in point]))
     return coordinates
 
+
 def read_fiber(fiber_line, coordinates_line):
-    _, id, type, length, delta_l, delta_r = fiber_line.split(' ')
+    _, id, type, length, delta_l, delta_r = fiber_line.split(" ")
     coordinates = read_coordinates(coordinates_line)
-    return {
-        id: {
-            'type_name': type,
-            'points': coordinates}}
+    return {id: {"type_name": type, "points": coordinates}}
 
 
 class MedyanProcess(Process):
@@ -70,7 +65,7 @@ class MedyanProcess(Process):
     def __init__(self, parameters=None):
         super().__init__(parameters)
 
-        assert self.parameters['time_step'] > self.parameters['snapshot']
+        assert self.parameters["time_step"] > self.parameters["snapshot"]
 
     def ports_schema(self):
         return {
@@ -95,19 +90,16 @@ class MedyanProcess(Process):
             unique_id: {"type_name": "A", "points": points}
             for unique_id, points in config.get("fibers", {}).items()
         }
-        return {
-            'fibers': initial_fibers}
+        return {"fibers": initial_fibers}
 
     def transform_points(self, points, inverse=False):
-        transform = np.array(self.parameters['transform_points'])
+        transform = np.array(self.parameters["transform_points"])
         if inverse:
             transform = -transform
-        return [
-            transform + point
-            for point in points]
+        return [transform + point for point in points]
 
     def transform_fiber(self, fiber, inverse=False):
-        fiber['points'] = self.transform_points(fiber['points'], inverse)
+        fiber["points"] = self.transform_points(fiber["points"], inverse)
         return fiber
 
     def read_snapshot(self, snapshot_path):
@@ -139,13 +131,11 @@ class MedyanProcess(Process):
 
         fiber_types = set()
         for fiber in initial_fibers.values():
-            fiber_types.add(fiber['type_name'])
+            fiber_types.add(fiber["type_name"])
         num_fiber_types = len(fiber_types)
 
         fiber_lines = [
-            fiber_to_string(
-                fiber["type_name"],
-                self.transform_points(fiber["points"]))
+            fiber_to_string(fiber["type_name"], self.transform_points(fiber["points"]))
             for fiber in initial_fibers.values()
         ]
 
@@ -160,10 +150,11 @@ class MedyanProcess(Process):
         system_template = self.parameters["system_template"]
         template = env.get_template(system_template)
         system_text = template.render(
-            fiber_file=self.parameters['fiber_file'],
+            fiber_file=self.parameters["fiber_file"],
             num_fiber_types=num_fiber_types,
             timestep=timestep,
-            snapshot_time=self.parameters['snapshot'])
+            snapshot_time=self.parameters["snapshot"],
+        )
 
         system_path = input_directory / self.parameters["system_file"]
         with open(system_path, "w") as system_file:
@@ -182,52 +173,60 @@ class MedyanProcess(Process):
         medyan_process = subprocess.Popen(medyan_command, stdout=subprocess.PIPE)
         output, error = medyan_process.communicate()
 
-        print(output.decode('utf-8'))
+        print(output.decode("utf-8"))
 
         # TODO: perform the reverse transform for output points
 
-        output_directory = Path(self.parameters['output_directory'])
-        fibers = self.read_snapshot(
-            output_directory / "snapshot.traj")
+        output_directory = Path(self.parameters["output_directory"])
+        fibers = self.read_snapshot(output_directory / "snapshot.traj")
 
         fibers = {
             fiber_ids[int(id)]: self.transform_fiber(fiber, inverse=True)
-            for id, fiber in fibers.items()}
+            for id, fiber in fibers.items()
+        }
 
-        return {
-            'fibers': fibers}
-        
-
+        return {"fibers": fibers}
 
 
 def main():
     """Simulate the process and plot results."""
+    parser = argparse.ArgumentParser(description="Run a MEDYAN simulation")
+    parser.add_argument(
+        "medyan_executable_path",
+        help="the file path to the MEDYAN executable",
+    )
+    args = parser.parse_args()
+
     # make an output directory to save plots
     out_dir = os.path.join(PROCESS_OUT_DIR, NAME)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    medyan = MedyanProcess({
-        'medyan_executable': '/home/youdonotexist/Downloads/medyan-4.2.0/build/medyan',
-        'transform_points': [500, 500, 500],
-        'time_step': 10.0})
+    medyan = MedyanProcess(
+        {
+            # "...../medyan/build/medyan"
+            "medyan_executable": args.medyan_executable_path,
+            "transform_points": [500, 500, 500],
+            "time_step": 10.0,
+        }
+    )
     initial_state = {
-        'fibers': {
-            '1': {
-                'type_name': 'Actin-Polymer',
-                'points': [
-                    np.array([-70.0, 0.0, 100.0]),
-                    np.array([10.0, 100.0, 0.0])]},
-            '2': {
-                'type_name': 'Actin-Polymer',
-                'points': [
-                    np.array([-70.0, 100.0, 0.0]),
-                    np.array([10.0, 0.0, 100.0])]}}}
+        "fibers": {
+            "1": {
+                "type_name": "Actin-Polymer",
+                "points": [np.array([-70.0, 0.0, 100.0]), np.array([10.0, 100.0, 0.0])],
+            },
+            "2": {
+                "type_name": "Actin-Polymer",
+                "points": [np.array([-70.0, 100.0, 0.0]), np.array([10.0, 0.0, 100.0])],
+            },
+        }
+    }
 
-    output = simulate_process(medyan, {
-        'initial_state': initial_state,
-        'total_time': 100,
-        'return_raw_data': True})
+    output = simulate_process(
+        medyan,
+        {"initial_state": initial_state, "total_time": 100, "return_raw_data": True},
+    )
 
     # plot the simulation output
     plot_settings = {}

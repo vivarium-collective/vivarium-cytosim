@@ -6,6 +6,7 @@ from simularium_models_util.actin import ActinUtil, ActinTestData
 
 from ..util import agents_update
 
+
 def get_next_actin_id(prev_actin_id, neighbor_ids):
     """
     Get the ID of the neighbor other than
@@ -30,9 +31,7 @@ def get_actin_monomer_positions(
         result = []
     start_actin = particles[start_actin_id]
     result.append(start_actin["position"])
-    next_actin_id = get_next_actin_id(
-        prev_actin_id, start_actin["neighbor_ids"]
-    )
+    next_actin_id = get_next_actin_id(prev_actin_id, start_actin["neighbor_ids"])
     if next_actin_id < 0:
         return result
     return get_actin_monomer_positions(
@@ -79,11 +78,13 @@ def generate_fibers_from_monomers(monomers, box_size=150.0):
     pointed_actin_ids = {}
     for topology_id in monomers["topologies"]:
         # assume first element is the pointed end?
-        pointed_actin_ids[topology_id] = monomers['topologies'][topology_id]['particle_ids'][0]
+        pointed_actin_ids[topology_id] = monomers["topologies"][topology_id][
+            "particle_ids"
+        ][0]
         # for particle_id in monomers["topologies"][topology_id]["particle_ids"]:
         #     if "pointed" in monomers["particles"][particle_id]["type_name"]:
         #         pointed_actin_ids[topology_id] = particle_id
-                # break
+        # break
 
     result = {}
     for topology_id in pointed_actin_ids:
@@ -153,7 +154,7 @@ class MonomerToFiber(Deriver):
         }
 
     def next_update(self, timestep, states):
-        print('in monomer to fiber deriver next update')
+        print("in monomer to fiber deriver next update")
 
         monomers = states["monomers"]
         previous_fibers = states["fibers"]
@@ -162,8 +163,7 @@ class MonomerToFiber(Deriver):
 
         fiber_update = agents_update(previous_fibers, monomer_fibers)
 
-        return {
-            "fibers": fiber_update}
+        return {"fibers": fiber_update}
 
 
 def test_fiber_to_monomer():

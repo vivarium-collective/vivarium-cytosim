@@ -77,7 +77,6 @@ class FiberToMonomer(Deriver):
             for fiber_id in fiber_data
         ]
 
-
         fiber_monomers = ActinGenerator.get_monomers(fibers, 0)
         for particle_id in fiber_monomers["particles"]:
             fiber_monomers["particles"][particle_id] = dict(
