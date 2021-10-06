@@ -58,7 +58,7 @@ class ReaddyActinProcess(Process):
         "total_steps": 1e3,
         "time_step": 0.0000001,
         "internal_timestep": 0.1,
-        "box_size": 150.0,  # nm
+        "box_size": 1000.0,  # nm
         "temperature_C": 22.0,  # from Pollard experiments
         "viscosity": 8.1,  # cP, viscosity in cytoplasm
         "force_constant": 250.0,

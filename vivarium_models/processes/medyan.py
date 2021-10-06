@@ -21,11 +21,11 @@ import subprocess
 NAME = "MEDYAN"
 
 
-def fiber_to_string(type, points):
+def fiber_to_string(type_name, points):
     point_strs = [
         " ".join([str(element) for element in point])
         for point in points]
-    line = " ".join(["FILAMENT", str(type)] + point_strs)
+    line = " ".join(["FILAMENT", str(type_name)] + point_strs)
     return line
 
 def read_coordinates(coordinates_line):
@@ -214,12 +214,12 @@ def main():
     initial_state = {
         'fibers': {
             '1': {
-                'type_name': '0', # 'A',
+                'type_name': 'Actin-Polymer',
                 'points': [
                     np.array([-70.0, 0.0, 100.0]),
                     np.array([10.0, 100.0, 0.0])]},
             '2': {
-                'type_name': '0', # 'B',
+                'type_name': 'Actin-Polymer',
                 'points': [
                     np.array([-70.0, 100.0, 0.0]),
                     np.array([10.0, 0.0, 100.0])]}}}

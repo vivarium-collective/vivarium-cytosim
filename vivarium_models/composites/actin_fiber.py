@@ -3,7 +3,6 @@ import numpy as np
 from vivarium.core.composer import Composer
 from vivarium.core.engine import Engine
 from vivarium.processes.alternator import Alternator, PeriodicEvent
-from vivarium.core.registry import emitter_registry
 
 from vivarium_models.processes.readdy_actin_process import ReaddyActinProcess
 from vivarium_models.processes.medyan import MedyanProcess
@@ -102,7 +101,6 @@ def test_actin_fiber():
     composite = actin_fiber.generate()
     composite['initial_state'] = initial_state
 
-    emitter_registry.register('simularium', SimulariumEmitter)
     engine = Engine(
         processes=composite['processes'],
         topology=composite['topology'],
