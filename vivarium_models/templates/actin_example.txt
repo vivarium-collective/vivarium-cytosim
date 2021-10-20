@@ -49,7 +49,7 @@ FILAMENTTYPE:                0
 
 # Option 2: Initialize by setting input filament file
 
-FILAMENTFILE:                {{fiber_file}}
+FILAMENTFILE:                filaments.txt
 
 
 ####################################################
@@ -192,8 +192,8 @@ NUMBINDINGSITES:               4
 ### 4. The number of filament type
 # I.e. actin filament, microtubule, intermediate filament
 
-NUMFILAMENTTYPES:              {{num_filament_types}}
-NUMFILAMENTSPECIES:            {{num_filament_types}}
+NUMFILAMENTTYPES:              1
+NUMFILAMENTSPECIES:            1
 
 ### 5. The compartment size
 # Based on Kuramoto length, see Popov et al., PLoS Comp Biol, 2016 
