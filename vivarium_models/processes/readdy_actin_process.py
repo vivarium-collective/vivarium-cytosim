@@ -14,6 +14,8 @@ NAME = "ReaDDy_actin"
 
 test_monomer_data = {
     "monomers": {
+        "box_center": np.array([3000.0, 1000.0, 1000.0]),  # to be chosen by alternator
+        "box_size": 500.0,
         "topologies": {
             1: {
                 "type_name": "Arp23-Dimer",
@@ -58,7 +60,7 @@ class ReaddyActinProcess(Process):
         "total_steps": 1e3,
         "time_step": 0.0000001,
         "internal_timestep": 0.1,
-        "box_size": 1000.0,  # nm
+        "box_size": 500.0,  # nm
         "temperature_C": 22.0,  # from Pollard experiments
         "viscosity": 8.1,  # cP, viscosity in cytoplasm
         "force_constant": 250.0,
@@ -117,6 +119,16 @@ class ReaddyActinProcess(Process):
     def ports_schema(self):
         return {
             "monomers": {
+                "box_center": {
+                    "_default": np.array([3000.0, 1000.0, 1000.0]),
+                    "_updater": "set",
+                    "_emit": True,
+                },
+                "box_size": {
+                    "_default": 500.0,
+                    "_updater": "set",
+                    "_emit": True,
+                },
                 "topologies": {
                     "*": {
                         "type_name": {
@@ -226,13 +238,21 @@ class ReaddyActinProcess(Process):
 
 def test_readdy_actin_process():
     monomer_data = ActinTestData.linear_actin_monomers()
+    monomer_data["box_center"] = np.array([3000.0, 1000.0, 1000.0])
+    monomer_data["box_size"] = 500.0
     readdy_actin_process = ReaddyActinProcess()
 
     engine = Engine(
         {
             "processes": {"readdy_actin_process": readdy_actin_process},
-            "topology": {"readdy_actin_process": {"monomers": ("monomers",)}},
-            "initial_state": {"monomers": monomer_data},
+            "topology": {
+                "readdy_actin_process": {
+                    "monomers": ("monomers",),
+                },
+            },
+            "initial_state": {
+                "monomers": monomer_data,
+            },
         }
     )
 

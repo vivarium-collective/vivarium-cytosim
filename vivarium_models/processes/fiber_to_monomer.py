@@ -15,6 +15,11 @@ class FiberToMonomer(Deriver):
 
     def ports_schema(self):
         return {
+            "fibers_box_extent": {
+                "_default": np.array([4000.0, 2000.0, 2000.0]),
+                "_updater": "set",
+                "_emit": True,
+            },
             "fibers": {
                 "*": {
                     "type_name": {
@@ -30,6 +35,16 @@ class FiberToMonomer(Deriver):
                 }
             },
             "monomers": {
+                "box_center": {
+                    "_default": np.array([3000.0, 1000.0, 1000.0]),
+                    "_updater": "set",
+                    "_emit": True,
+                },
+                "box_size": {
+                    "_default": 500.0,
+                    "_updater": "set",
+                    "_emit": True,
+                },
                 "topologies": {
                     "*": {
                         "type_name": {
@@ -71,13 +86,18 @@ class FiberToMonomer(Deriver):
 
         fiber_data = states["fibers"]
         previous_monomers = states["monomers"]
+        monomer_box_center = previous_monomers["box_center"]
+        monomer_box_size = previous_monomers["box_size"]
 
         fibers = [
             FiberData(fiber_id, fiber_data[fiber_id]["points"])
             for fiber_id in fiber_data
+            if len(fiber_data[fiber_id]["points"]) > 1
         ]
 
-        fiber_monomers = ActinGenerator.get_monomers(fibers, 0)
+        fiber_monomers = ActinGenerator.get_monomers(
+            fibers, monomer_box_center, monomer_box_size, use_uuids=False
+        )
         for particle_id in fiber_monomers["particles"]:
             fiber_monomers["particles"][particle_id] = dict(
                 fiber_monomers["particles"][particle_id]
