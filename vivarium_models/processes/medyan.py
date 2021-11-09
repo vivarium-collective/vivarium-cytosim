@@ -173,6 +173,9 @@ class MedyanProcess(Process):
             fiber_ids[int(id)]: self.transform_fiber(fiber, inverse=True)
             for id, fiber in fibers.items()
         }
+
+        import ipdb; ipdb.set_trace()
+        
         return {"fibers_box_extent": box_extent, "fibers": fibers}
 
     @staticmethod

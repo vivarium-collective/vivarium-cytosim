@@ -108,6 +108,7 @@ class ReaddyActinProcess(Process):
         "implicit_actin_concentration": 0,
         "nonspatial_polymerization": False,
         "verbose": False,
+        "periodic_boundary": False,
     }
 
     def __init__(self, parameters=None):

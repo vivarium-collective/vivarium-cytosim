@@ -3,9 +3,9 @@
 
 NDIM:                        3
 
-NX:                          8
-NY:                          4
-NZ:                          4 
+NX:                          15
+NY:                          15
+NZ:                          15
 
 COMPARTMENTSIZEX:            500.0
 COMPARTMENTSIZEY:            500.0
