@@ -63,6 +63,22 @@ cd build
 make
 ```
 
+### CYTOSIM
+
+First, clone the repo:
+
+    git clone https://gitlab.com/f-nedelec/cytosim.git
+
+Change the header to allow for 3d (in file src/math/dim.h)
+
+    #define DIM 3 # instead of 2
+
+Then, make the executable (avoid the GLEW functionality):
+
+    make sim
+    make report
+
+
 ### Alternatively:
 
 **Stable Release:** `pip install vivarium_models`<br>
