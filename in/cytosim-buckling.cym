@@ -1,0 +1,261 @@
+% Fiber under compression to measure buckling force
+% F. Nedelec, 23.05.2017, 21.02.2018
+
+set simul system
+{
+    time_step = 0.001
+    viscosity = 0.01
+    kT = 0.001
+}
+
+set space cell
+{
+    shape = rectangle
+}
+
+new cell
+{
+    sizeX = 5
+    sizeY = 5
+    sizeZ = 5
+}
+
+set fiber actin
+{
+    rigidity = 10
+    segmentation = 0.1
+    display = ( point=6,1; line=10,2; )
+}
+
+set hand binder
+{
+    binding = 10, 0.05
+    unbinding = 0, inf
+    bind_also_end = 1
+ 
+    display = ( width=3; size=12; color=green )
+}
+
+set single link
+{
+    hand = binder
+    activity = fixed
+    stiffness = 1000
+}
+
+new actin
+{
+    mark = 1
+    shape = 1.0 0.9125 1.0, 3.16 0.9125 1.0
+}
+
+
+new actin
+{
+    mark = 2
+    shape = 1.0 0.9475 0.93937822174, 3.16 0.9475 0.93937822174
+}
+
+
+new actin
+{
+    mark = 3
+    shape = 1.0 0.93 0.9696891108700001, 3.16 0.93 0.9696891108700001
+}
+
+
+new actin
+{
+    mark = 4
+    shape = 1.0 0.9475 1.0, 3.16 0.9475 1.0
+}
+
+
+new actin
+{
+    mark = 5
+    shape = 1.0 0.93 1.0303108891300001, 3.16 0.93 1.0303108891300001
+}
+
+
+new actin
+{
+    mark = 6
+    shape = 1.0 0.9475 1.06062177826, 3.16 0.9475 1.06062177826
+}
+
+
+new actin
+{
+    mark = 7
+    shape = 1.0 0.965 0.9090673326, 3.16 0.965 0.9090673326
+}
+
+
+new actin
+{
+    mark = 8
+    shape = 1.0 0.9825 0.93937822174, 3.16 0.9825 0.93937822174
+}
+
+
+new actin
+{
+    mark = 9
+    shape = 1.0 0.965 0.9696891108700001, 3.16 0.965 0.9696891108700001
+}
+
+
+new actin
+{
+    mark = 10
+    shape = 1.0 0.9825 1.0, 3.16 0.9825 1.0
+}
+
+
+new actin
+{
+    mark = 11
+    shape = 1.0 0.965 1.0303108891300001, 3.16 0.965 1.0303108891300001
+}
+
+
+new actin
+{
+    mark = 12
+    shape = 1.0 0.9825 1.06062177826, 3.16 0.9825 1.06062177826
+}
+
+
+new actin
+{
+    mark = 13
+    shape = 1.0 0.965 1.0909326674, 3.16 0.965 1.0909326674
+}
+
+
+new actin
+{
+    mark = 14
+    shape = 1.0 1.0 0.9090673326, 3.16 1.0 0.9090673326
+}
+
+
+new actin
+{
+    mark = 15
+    shape = 1.0 1.0175 0.93937822174, 3.16 1.0175 0.93937822174
+}
+
+
+new actin
+{
+    mark = 16
+    shape = 1.0 1.0 0.9696891108700001, 3.16 1.0 0.9696891108700001
+}
+
+
+new actin
+{
+    mark = 17
+    shape = 1.0 1.0175 1.0, 3.16 1.0175 1.0
+}
+
+
+new actin
+{
+    mark = 18
+    shape = 1.0 1.0 1.0303108891300001, 3.16 1.0 1.0303108891300001
+}
+
+
+new actin
+{
+    mark = 19
+    shape = 1.0 1.0175 1.06062177826, 3.16 1.0175 1.06062177826
+}
+
+
+new actin
+{
+    mark = 20
+    shape = 1.0 1.0 1.0909326674, 3.16 1.0 1.0909326674
+}
+
+
+new actin
+{
+    mark = 21
+    shape = 1.0 1.035 0.9090673326, 3.16 1.035 0.9090673326
+}
+
+
+new actin
+{
+    mark = 22
+    shape = 1.0 1.0525 0.93937822174, 3.16 1.0525 0.93937822174
+}
+
+
+new actin
+{
+    mark = 23
+    shape = 1.0 1.035 0.9696891108700001, 3.16 1.035 0.9696891108700001
+}
+
+
+new actin
+{
+    mark = 24
+    shape = 1.0 1.0525 1.0, 3.16 1.0525 1.0
+}
+
+
+new actin
+{
+    mark = 25
+    shape = 1.0 1.035 1.0303108891300001, 3.16 1.035 1.0303108891300001
+}
+
+
+new actin
+{
+    mark = 26
+    shape = 1.0 1.0525 1.06062177826, 3.16 1.0525 1.06062177826
+}
+
+
+new actin
+{
+    mark = 27
+    shape = 1.0 1.035 1.0909326674, 3.16 1.035 1.0909326674
+}
+
+
+new actin
+{
+    mark = 28
+    shape = 1.0 1.07 0.9696891108700001, 3.16 1.07 0.9696891108700001
+}
+
+
+new actin
+{
+    mark = 29
+    shape = 1.0 1.0875000000000001 1.0, 3.16 1.0875000000000001 1.0
+}
+
+
+new actin
+{
+    mark = 30
+    shape = 1.0 1.07 1.0303108891300001, 3.16 1.07 1.0303108891300001
+}
+
+run 1000 system
+{
+    nb_frames = 1
+}
+
+% report single:force force.txt { verbose=0; }
+% report fiber:tension tension.txt { verbose=0; plane = 1 0 0, 0; }
