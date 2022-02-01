@@ -89,15 +89,22 @@ class CytosimProcess(Process):
             self.output_path,
         )
 
-        report_input = self.output_path / self.parameters['model_name'] / 'objects.cmo'
+        previous_dir = os.getcwd()
+        report_base = self.output_path / self.parameters['model_name']
+        report_exec = os.path.abspath(self.parameters['cytosim_report'])
+        os.chdir(report_base)
+
+        # report_input = report_base / 'objects.cmo'
         report_command = [
-            os.path.abspath(self.parameters['cytosim_report']),
+            report_exec,
             "fiber:points",
-            f"input={report_input}"
+            # f"input={report_input}"
         ]
 
         cytosim_process = subprocess.Popen(report_command, stdout=subprocess.PIPE)
         output, error = cytosim_process.communicate()
+
+        os.chdir(previous_dir)
 
         print(output.decode("utf-8"))
 
