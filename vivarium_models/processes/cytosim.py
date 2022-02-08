@@ -21,6 +21,9 @@ from vivarium_models.library.schema import fibers_schema
 from vivarium_models.data.fibers import initial_fibers
 import vivarium_models.library.go_sim as go_sim
 
+from simulariumio.cytosim import CytosimConverter, CytosimData, CytosimObjectInfo
+from simulariumio import InputFileData
+
 NAME = "CYTOSIM"
 
 def fiber_section(id, fiber):
@@ -39,6 +42,30 @@ def fiber_section(id, fiber):
     ]
 
     return '\n'.join(lines)
+
+
+def load_report(output):
+    data = CytosimData(
+        object_info={
+            'fibers': CytosimObjectInfo(
+                cytosim_file=InputFileData(
+                    file_contents=output))})
+    converter = CytosimConverter(data)
+    all_ids = converter._data.agent_data.unique_ids[-1]
+    all_fibers = converter._data.agent_data.subpoints[-1]
+    all_n_points = converter._data.agent_data.n_subpoints[-1]
+    all_types = converter._data.agent_data.types[-1]
+
+    return {
+        str(int(id)): {
+            'type_name': fiber_type,
+            'points': [points for points in fiber_points[:int(n_points)]]}
+        for id, fiber_points, n_points, fiber_type in zip(all_ids, all_fibers, all_n_points, all_types)}
+
+
+def parse_report(output):
+    lines = output.split('\n')
+    fiber_lines = [line for line in lines if not line.startswith('%')]
 
 
 class CytosimProcess(Process):
@@ -94,11 +121,9 @@ class CytosimProcess(Process):
         report_exec = os.path.abspath(self.parameters['cytosim_report'])
         os.chdir(report_base)
 
-        # report_input = report_base / 'objects.cmo'
         report_command = [
             report_exec,
             "fiber:points",
-            # f"input={report_input}"
         ]
 
         cytosim_process = subprocess.Popen(report_command, stdout=subprocess.PIPE)
@@ -107,20 +132,24 @@ class CytosimProcess(Process):
         os.chdir(previous_dir)
 
         print(output.decode("utf-8"))
+        report = load_report(output.decode("utf-8"))
 
         import ipdb; ipdb.set_trace()
 
-        return {}
+        return {'fibers': report}
+
 
 def main():
     cytosim = CytosimProcess({})
     output = simulate_process(
         cytosim, {
             'initial_state': initial_fibers,
-            'total_time': 1,
+            'total_time': 5,
             'return_raw_data': True
         }
     )
+
+    import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     main()

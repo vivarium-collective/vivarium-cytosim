@@ -47,7 +47,8 @@ set single link
 
 run {{simulation_time}} system
 {
-    nb_frames = 1
+    % nb_frames = 1
+    nb_steps = 10
 }
 
 % report single:force force.txt { verbose=0; }
