@@ -15,9 +15,9 @@ set space cell
 
 new cell
 {
-    sizeX = {{radius}}
-    sizeY = {{radius}}
-    sizeZ = {{radius}}
+    sizeX = {{bounds_x}}
+    sizeY = {{bounds_y}}
+    sizeZ = {{bounds_z}}
 }
 
 set fiber actin

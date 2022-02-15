@@ -3,6 +3,7 @@ import numpy as np
 import argparse
 
 from vivarium.core.process import Process
+from vivarium.core.engine import Engine
 from vivarium.core.composition import (
     simulate_process,
     PROCESS_OUT_DIR,
@@ -22,15 +23,16 @@ from vivarium_models.data.fibers import initial_fibers
 import vivarium_models.library.go_sim as go_sim
 
 from simulariumio.cytosim import CytosimConverter, CytosimData, CytosimObjectInfo
-from simulariumio import InputFileData
+from simulariumio import InputFileData, DisplayData
 
 NAME = "CYTOSIM"
 
+RELATIVE_MICRON = 0.001
+
 def fiber_section(id, fiber):
     points = fiber['points']
-    relative_micron = 0.001
     # convert to microns
-    point_strs = [" ".join([str(element * relative_micron) for element in point]) for point in points]
+    point_strs = [" ".join([str(element * RELATIVE_MICRON) for element in point]) for point in points]
     point_line = ', '.join(point_strs)
 
     lines = [
@@ -49,7 +51,9 @@ def load_report(output):
         object_info={
             'fibers': CytosimObjectInfo(
                 cytosim_file=InputFileData(
-                    file_contents=output))})
+                    file_contents=output),
+                display_data={
+                    1: DisplayData(name='Actin-Polymer')})})
     converter = CytosimConverter(data)
     all_ids = converter._data.agent_data.unique_ids[-1]
     all_fibers = converter._data.agent_data.subpoints[-1]
@@ -59,13 +63,8 @@ def load_report(output):
     return {
         str(int(id)): {
             'type_name': fiber_type,
-            'points': [points for points in fiber_points[:int(n_points)]]}
+            'points': [points / RELATIVE_MICRON for points in fiber_points[:int(n_points)]]}
         for id, fiber_points, n_points, fiber_type in zip(all_ids, all_fibers, all_n_points, all_types)}
-
-
-def parse_report(output):
-    lines = output.split('\n')
-    fiber_lines = [line for line in lines if not line.startswith('%')]
 
 
 class CytosimProcess(Process):
@@ -86,7 +85,16 @@ class CytosimProcess(Process):
         self.output_path = Path(self.parameters['output_directory'])
 
     def ports_schema(self):
-        return fibers_schema()
+        ports = fibers_schema()
+        ports['choices'] = {
+            'medyan_active': {
+                '_default': True,
+                '_emit': True},
+            'readdy_active': {
+                '_default': False,
+                '_emit': True}}
+
+        return ports
 
     def initial_state(self, config):
         return {}
@@ -97,10 +105,15 @@ class CytosimProcess(Process):
 
         fiber_sections = [fiber_section(id, fiber) for id, fiber in initial_fibers.items()]
 
+        box_extent = state['fibers_box_extent'] * RELATIVE_MICRON
+
         template = env.get_template(self.parameters['cytosim_template'])
         cytosim_config = template.render(
             internal_timestep=self.parameters['internal_timestep'],
-            radius=self.parameters['cell_radius'],
+            # radius=self.parameters['cell_radius'],
+            bounds_x=box_extent[0],
+            bounds_y=box_extent[1],
+            bounds_z=box_extent[2],
             filament_section='\n\n\n'.join(fiber_sections),
             simulation_time=int(timestep/self.parameters['internal_timestep']),
         )
@@ -134,20 +147,37 @@ class CytosimProcess(Process):
         print(output.decode("utf-8"))
         report = load_report(output.decode("utf-8"))
 
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
 
         return {'fibers': report}
 
 
 def main():
     cytosim = CytosimProcess({})
-    output = simulate_process(
-        cytosim, {
-            'initial_state': initial_fibers,
-            'total_time': 5,
-            'return_raw_data': True
-        }
-    )
+
+    engine = Engine(
+        processes={'cytosim': cytosim},
+        topology={
+            'cytosim': {
+                'fibers': ('fibers',),
+                'fibers_box_extent': ('fibers_box_extent',),
+                'choices': ('choices',)}},
+        initial_state=initial_fibers,
+        emitter='simularium')
+
+    engine.update(10.0)
+    output = engine.emitter.get_data()
+
+    # output = simulate_process(
+    #     cytosim, {
+    #         'initial_state': initial_fibers,
+    #         'total_time': 5,
+    #         'return_raw_data': True,
+    #         'settings': {
+    #             'emitter': 'simularium'
+    #         },
+    #     }
+    # )
 
     import ipdb; ipdb.set_trace()
 
