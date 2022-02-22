@@ -1,4 +1,5 @@
 import os
+import shutil
 import numpy as np
 import argparse
 
@@ -143,11 +144,12 @@ class CytosimProcess(Process):
         output, error = cytosim_process.communicate()
 
         os.chdir(previous_dir)
+        shutil.rmtree(report_base)
 
         print(output.decode("utf-8"))
         report = load_report(output.decode("utf-8"))
 
-        # import ipdb; ipdb.set_trace()
+        import ipdb; ipdb.set_trace()
 
         return {'fibers': report}
 

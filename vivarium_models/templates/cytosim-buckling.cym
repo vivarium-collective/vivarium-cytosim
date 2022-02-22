@@ -15,9 +15,7 @@ set space cell
 
 new cell
 {
-    sizeX = {{bounds_x}}
-    sizeY = {{bounds_y}}
-    sizeZ = {{bounds_z}}
+    length = {{bounds_x}}, {{bounds_y}}, {{bounds_z}}
 }
 
 set fiber actin
@@ -47,8 +45,7 @@ set single link
 
 run {{simulation_time}} system
 {
-    % nb_frames = 1
-    nb_steps = 10
+    nb_frames = 10
 }
 
 % report single:force force.txt { verbose=0; }
