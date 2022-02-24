@@ -23,6 +23,9 @@ set fiber actin
     rigidity = 10
     segmentation = 0.1
     display = ( point=6,1; line=10,2; )
+    {% if confine %}
+    confine = {{confine.side}}, {{confine.force}}, {{confine.space}}
+    {% endif %}
 }
 
 set hand binder
@@ -41,11 +44,18 @@ set single link
     stiffness = 1000
 }
 
+{% for filament in filaments %}
+new actin
+{
+    mark = {{filament.id}}
+    shape = {{filament.points|join(', ')}}
+}
+{% endfor %}
 {{filament_section}}
 
 run {{simulation_time}} system
 {
-    nb_frames = 10
+    nb_frames = 1
 }
 
 % report single:force force.txt { verbose=0; }

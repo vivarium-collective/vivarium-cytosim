@@ -34,17 +34,22 @@ def fiber_section(id, fiber):
     points = fiber['points']
     # convert to microns
     point_strs = [" ".join([str(element * RELATIVE_MICRON) for element in point]) for point in points]
-    point_line = ', '.join(point_strs)
+    return {
+        'id': id,
+        'points': point_strs}
 
-    lines = [
-        f'new actin',
-        '{',
-        f'    mark = {id}',
-        f'    shape = {point_line}',
-        '}',
-    ]
 
-    return '\n'.join(lines)
+    # point_line = ', '.join(point_strs)
+
+    # lines = [
+    #     f'new actin',
+    #     '{',
+    #     f'    mark = {id}',
+    #     f'    shape = {point_line}',
+    #     '}',
+    # ]
+
+    # return '\n'.join(lines)
 
 
 def load_report(output):
@@ -74,6 +79,7 @@ class CytosimProcess(Process):
         'internal_timestep': 0.001,
         'cytosim_template': "cytosim-buckling.cym",
         'cell_radius': 5,
+        'confine': None,
         "input_directory": "in/",
         "output_directory": "out/",
         'cytosim_sim': "../cytosim/bin/sim",
@@ -97,6 +103,9 @@ class CytosimProcess(Process):
 
         return ports
 
+    def calculate_timestep(self, state):
+        return 0.1
+
     def initial_state(self, config):
         return {}
 
@@ -112,10 +121,12 @@ class CytosimProcess(Process):
         cytosim_config = template.render(
             internal_timestep=self.parameters['internal_timestep'],
             # radius=self.parameters['cell_radius'],
+            confine=self.parameters['confine'],
             bounds_x=box_extent[0],
             bounds_y=box_extent[1],
             bounds_z=box_extent[2],
-            filament_section='\n\n\n'.join(fiber_sections),
+            filaments=fiber_sections,
+            # filament_section='\n\n\n'.join(fiber_sections),
             simulation_time=int(timestep/self.parameters['internal_timestep']),
         )
 
@@ -155,7 +166,11 @@ class CytosimProcess(Process):
 
 
 def main():
-    cytosim = CytosimProcess({})
+    cytosim = CytosimProcess({
+        'confine': {
+            'side': 'inside',
+            'force': 100,
+            'space': 'cell'}})
 
     engine = Engine(
         processes={'cytosim': cytosim},
@@ -169,17 +184,6 @@ def main():
 
     engine.update(10.0)
     output = engine.emitter.get_data()
-
-    # output = simulate_process(
-    #     cytosim, {
-    #         'initial_state': initial_fibers,
-    #         'total_time': 5,
-    #         'return_raw_data': True,
-    #         'settings': {
-    #             'emitter': 'simularium'
-    #         },
-    #     }
-    # )
 
     import ipdb; ipdb.set_trace()
 
