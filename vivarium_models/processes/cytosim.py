@@ -126,7 +126,6 @@ class CytosimProcess(Process):
             bounds_y=box_extent[1],
             bounds_z=box_extent[2],
             filaments=fiber_sections,
-            # filament_section='\n\n\n'.join(fiber_sections),
             simulation_time=int(timestep/self.parameters['internal_timestep']),
         )
 

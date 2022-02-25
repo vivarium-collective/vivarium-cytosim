@@ -51,7 +51,6 @@ new actin
     shape = {{filament.points|join(', ')}}
 }
 {% endfor %}
-{{filament_section}}
 
 run {{simulation_time}} system
 {
