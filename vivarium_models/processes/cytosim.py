@@ -73,10 +73,20 @@ def load_report(output):
         for id, fiber_points, n_points, fiber_type in zip(all_ids, all_fibers, all_n_points, all_types)}
 
 
+def temperature_to_kT(temp):
+    return 1.3806e-5 * (temp + 273.15)
+
+
+# def random_actin_fiber(bounds):
+
+
 class CytosimProcess(Process):
     defaults = {
         'model_name': 'cytosim_model',
         'internal_timestep': 0.001,
+        'viscosity': 1,
+        'actin_segmentation': 0.1,
+        'temperature': 37, # in Celsius
         'cytosim_template': "cytosim-buckling.cym",
         'cell_radius': 5,
         'confine': None,
@@ -121,6 +131,9 @@ class CytosimProcess(Process):
         cytosim_config = template.render(
             internal_timestep=self.parameters['internal_timestep'],
             # radius=self.parameters['cell_radius'],
+            kT=temperature_to_kT(self.parameters['temperature']),
+            viscosity=self.parameters['viscosity'],
+            actin_segmentation=self.parameters['actin_segmentation'],
             confine=self.parameters['confine'],
             bounds_x=box_extent[0],
             bounds_y=box_extent[1],

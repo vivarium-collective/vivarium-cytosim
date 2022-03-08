@@ -4,8 +4,8 @@
 set simul system
 {
     time_step = {{internal_timestep}}
-    viscosity = 0.01
-    kT = 0.001
+    viscosity = {{viscosity}}
+    kT = {{kT}}
 }
 
 set space cell
@@ -21,7 +21,7 @@ new cell
 set fiber actin
 {
     rigidity = 10
-    segmentation = 0.1
+    segmentation = {{actin_segmentation}}
     display = ( point=6,1; line=10,2; )
     {% if confine %}
     confine = {{confine.side}}, {{confine.force}}, {{confine.space}}
