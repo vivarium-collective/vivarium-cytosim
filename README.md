@@ -101,5 +101,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for information related to developing the
     documentation for your Python package.
 
 
-**Allen Institute Software License**
 
