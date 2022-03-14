@@ -27,11 +27,11 @@ BOUNDARYDIAMETER:
 
 ### 2. Set total running time 
 
-RUNTIME:                     5.0
+RUNTIME:                     4.999999900000001
 
 ### 3. Output simulation results every SNAPSHOTTIME
 
-SNAPSHOTTIME:                1.0
+SNAPSHOTTIME:                0.5
 
 ### 4. Set chemistry input file name
 

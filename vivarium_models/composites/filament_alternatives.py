@@ -5,26 +5,17 @@ from vivarium.core.composer import Composer
 from vivarium.core.engine import Engine
 from vivarium.processes.alternator import Alternator, PeriodicEvent
 
-from vivarium_models.processes.readdy_actin_process import ReaddyActinProcess
 from vivarium_models.processes.medyan import MedyanProcess
-from vivarium_models.processes.monomer_to_fiber import MonomerToFiber
-from vivarium_models.processes.fiber_to_monomer import FiberToMonomer
+from vivarium_models.processes.cytosim import CytosimProcess
 
-READDY_TIMESTEP = 0.0000001
-ALTERNATOR_PERIODS = [10.0, READDY_TIMESTEP]
+ALTERNATOR_PERIODS = [5.0, 5.0]
 
-
-class ActinFiber(Composer):
+class FilamentAlternatives(Composer):
     defaults = {
         "periodic_event": {"periods": ALTERNATOR_PERIODS},
-        "readdy_actin": {
-            "time_step": READDY_TIMESTEP,
-            "_condition": ("choices", "readdy_active"),
-        },
         "medyan": {"time_step": 5.0, "_condition": ("choices", "medyan_active")},
-        "fiber_to_monomer": {"_condition": ("choices", "medyan_active")},
-        "monomer_to_fiber": {"_condition": ("choices", "readdy_active")},
-        "alternator": {"choices": ["medyan_active", "readdy_active"]},
+        "cytosim": {"time_step": 5.0, "_condition": ("choices", "cytosim_active")},
+        "alternator": {"choices": ["medyan_active", "cytosim_active"]},
     }
 
     def __init__(self, config=None):
@@ -32,18 +23,14 @@ class ActinFiber(Composer):
 
     def generate_processes(self, config):
         periodic_event = PeriodicEvent(config["periodic_event"])
-        readdy = ReaddyActinProcess(config["readdy_actin"])
         medyan = MedyanProcess(config["medyan"])
-        fiber_to_monomer = FiberToMonomer(config["fiber_to_monomer"])
-        monomer_to_fiber = MonomerToFiber(config["monomer_to_fiber"])
+        cytosim = CytosimProcess(config['cytosim'])
         alternator = Alternator(config["alternator"])
 
         return {
             "periodic_event": periodic_event,
-            "readdy_actin": readdy,
             "medyan": medyan,
-            "fiber_to_monomer": fiber_to_monomer,
-            "monomer_to_fiber": monomer_to_fiber,
+            "cytosim": cytosim,
             "alternator": alternator,
         }
 
@@ -53,10 +40,8 @@ class ActinFiber(Composer):
                 "event_trigger": ("alternate_trigger",),
                 "period_index": ("period_index",),
             },
-            "readdy_actin": {"monomers": ("monomers",)},
             "medyan": {"fibers": ("fibers",)},
-            "fiber_to_monomer": {"fibers": ("fibers",), "monomers": ("monomers",)},
-            "monomer_to_fiber": {"fibers": ("fibers",), "monomers": ("monomers",)},
+            "cytosim": {"fibers": ("fibers",)},
             "alternator": {
                 "alternate_trigger": ("alternate_trigger",),
                 "choices": {
@@ -64,16 +49,15 @@ class ActinFiber(Composer):
                         "choices",
                         "medyan_active",
                     ),
-                    "readdy_active": (
+                    "cytosim_active": (
                         "choices",
-                        "readdy_active",
+                        "cytosim_active",
                     ),
                 },
             },
         }
 
-
-def test_actin_fiber():
+def test_filament_alternatives():
     parser = argparse.ArgumentParser(description="Run a MEDYAN simulation")
     parser.add_argument(
         "medyan_executable_path",
@@ -81,7 +65,7 @@ def test_actin_fiber():
     )
     args = parser.parse_args()
     initial_state = {
-        "choices": {"medyan_active": True, "readdy_active": False},
+        "choices": {"medyan_active": False, "cytosim_active": True},
         "fibers": {
             "1": {
                 "type_name": "Actin-Polymer",
@@ -295,17 +279,17 @@ def test_actin_fiber():
             },
         },
     }
-
+    
     medyan_config = {
         "medyan_executable": args.medyan_executable_path,  # "...../medyan/build/medyan"
         "transform_points": [0, 0, 0],
     }
 
-    actin_fiber_config = {"medyan": medyan_config}
-    actin_fiber = ActinFiber(actin_fiber_config)
+    filament_alternatives_config = {'medyan': medyan_config}
+    filament_alternatives = FilamentAlternatives(filament_alternatives_config)
 
-    composite = actin_fiber.generate()
-    composite["initial_state"] = initial_state
+    composite = filament_alternatives.generate()
+    composite['initial_state'] = initial_state
 
     engine = Engine(
         processes=composite["processes"],
@@ -315,9 +299,12 @@ def test_actin_fiber():
         emit_processes=True,
     )
 
-    engine.update(15)
+    import ipdb; ipdb.set_trace()
+
+    engine.update(30)
+    
     engine.emitter.get_data()
 
-
 if __name__ == "__main__":
-    test_actin_fiber()
+    test_filament_alternatives()
+    
