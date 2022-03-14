@@ -67,7 +67,7 @@ park   = ''
 exe    = os.path.abspath('sim')
 
 try:
-    import vivarium_models.library.go_sim_lib as go_sim_lib
+    import vivarium_cytosim.library.go_sim_lib as go_sim_lib
 except ImportError:
     err.write("go_sim.py could not load go_sim_lib.py\n")
     sys.exit()

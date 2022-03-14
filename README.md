@@ -1,10 +1,6 @@
-# vivarium-models
+# vivarium-cytosim
 
-[![Build Status](https://github.com/allen-cell-animated/vivarium_models/workflows/Build%20Main/badge.svg)](https://github.com/allen-cell-animated/vivarium_models/actions)
-[![Documentation](https://github.com/allen-cell-animated/vivarium_models/workflows/Documentation/badge.svg)](https://allen-cell-animated.github.io/vivarium_models/)
-[![Code Coverage](https://codecov.io/gh/allen-cell-animated/vivarium_models/branch/main/graph/badge.svg)](https://codecov.io/gh/allen-cell-animated/vivarium_models)
-
-Connecting Simularium prototypes together using Vivarium
+Provides a Vivarium Process wrapper for [Cytosim](https://gitlab.com/f-nedelec/cytosim)
 
 ---
 
@@ -49,20 +45,6 @@ To update:
 conda env update -f env.yml
 ```
 
-### MEDYAN
-
-To install MEDYAN:
-
-Download the MEDYAN source here (we are using version 4.2.0): http://medyan.org/download.html
-
-Unzip and cd into that dir, then at the command line:
-
-```
-./conf.sh
-cd build
-make
-```
-
 ### CYTOSIM
 
 First, clone the repo:
@@ -77,18 +59,6 @@ Then, make the executable (avoid the GLEW functionality):
 
     make sim
     make report
-
-
-### Alternatively:
-
-**Stable Release:** `pip install vivarium_models`<br>
-**Development Head:** `pip install git+https://github.com/allen-cell-animated/vivarium-models.git`
-
-ReaDDy models depend on ReaDDy, which requires conda. Install ReaDDy with `conda install -c readdy/label/dev readdy` after adding the conda-forge channel `conda config --add channels conda-forge`
-
-## Documentation
-
-For full package documentation please visit [allen-cell-animated.github.io/vivarium_models](https://allen-cell-animated.github.io/vivarium_models).
 
 ## Development
 
@@ -115,6 +85,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for information related to developing the
 
     This will generate and launch a web browser to view the most up-to-date
     documentation for your Python package.
-
-
-

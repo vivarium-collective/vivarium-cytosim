@@ -19,9 +19,9 @@ env = Environment(
 
 from pathlib import Path
 import subprocess
-from vivarium_models.library.schema import fibers_schema
-from vivarium_models.data.fibers import initial_fibers
-import vivarium_models.library.go_sim as go_sim
+from vivarium_cytosim.library.schema import fibers_schema
+from vivarium_cytosim.data.fibers import initial_fibers
+import vivarium_cytosim.library.go_sim as go_sim
 
 from simulariumio.cytosim import CytosimConverter, CytosimData, CytosimObjectInfo
 from simulariumio import InputFileData, DisplayData
