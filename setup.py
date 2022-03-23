@@ -64,26 +64,26 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    description="Simularium prototypes of connecting models in Vivarium",
+    description="Cytosim processes for Vivarium",
     entry_points={
         "console_scripts": [
-            "my_example=vivarium_models.bin.my_example:main"
+            "my_example=vivarium_cytosim.bin.my_example:main"
         ],
     },
     install_requires=requirements,
-    license="Allen Institute Software License",
+    license="Apache 2",
     long_description=readme,
     long_description_content_type="text/markdown",
     include_package_data=True,
-    keywords="vivarium_models",
-    name="vivarium_models",
+    keywords="vivarium_cytosim",
+    name="vivarium_cytosim",
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*"]),
     python_requires=">=3.7",
     setup_requires=setup_requirements,
-    test_suite="vivarium_models/tests",
+    test_suite="vivarium_cytosim/tests",
     tests_require=test_requirements,
     extras_require=extra_requirements,
-    url="https://github.com/allen-cell-animated/vivarium-models",
+    url="https://github.com/vivarium-collective/vivarium-cytosim",
     # Do not edit this string manually, always use bumpversion
     # Details in CONTRIBUTING.rst
     version="0.0.0",
