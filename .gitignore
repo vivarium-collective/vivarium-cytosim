@@ -141,3 +141,6 @@ cython_debug/
 .python-version
 /out
 *.simularium
+
+# user generated files
+/in
