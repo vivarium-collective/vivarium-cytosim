@@ -10,7 +10,7 @@ A Vivarium wrapper for [Cytosim](https://gitlab.com/f-nedelec/cytosim)
 **Development Head:** `pip install git+https://github.com/vivarium-collective/vivarium-cytosim.git`
 **Local Editable Install** `pip install -e .[dev]` (or `pip install -e .\[dev\]` on mac) from repo root directory
 
-### CYTOSIM Installation
+### Cytosim Installation
 
 First, clone the repo:
 
