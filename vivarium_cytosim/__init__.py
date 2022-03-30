@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-"""Top-level package for Vivarium Models."""
+"""Top-level package for Vivarium Cytosim."""
