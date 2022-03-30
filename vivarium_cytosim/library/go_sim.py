@@ -33,7 +33,7 @@ F. Nedelec, 03.2010, 10.2011, 05.2012, 04.2013, 12.2017
 try:
     import os, sys, time
 except ImportError:
-    host = os.getenv('HOSTNAME', 'unknown')
+    host = os.getenv("HOSTNAME", "unknown")
     sys.stderr.write("go_sim.py could not load necessary python modules on %s\n" % host)
     time.sleep(10000)
     sys.exit()
@@ -42,29 +42,31 @@ except ImportError:
 # if the child executable is killed on the same occasion.
 # This way 'CTRL-C' will kill the executable, but not this controlling script.
 
+
 def handle_signal(sig, frame):
     sys.stderr.write("go_sim.py escaped signal %i\n" % sig)
 
 
 try:
     import signal
+
     signal.signal(signal.SIGINT, handle_signal)
     signal.signal(signal.SIGTERM, handle_signal)
-    #sys.stderr.write("go_sim.py registered its signal handler\n")
+    # sys.stderr.write("go_sim.py registered its signal handler\n")
 except ImportError:
-    host = os.getenv('HOSTNAME', 'unknown')
+    host = os.getenv("HOSTNAME", "unknown")
     sys.stderr.write("go_sim.py could not load `signal` on %s\n" % host)
     pass
 
 
-#define output for error messages:
-err    = sys.stderr
-out    = sys.stdout
+# define output for error messages:
+err = sys.stderr
+out = sys.stdout
 
-njobs  = 1
+njobs = 1
 repeat = 1
-park   = ''
-exe    = os.path.abspath('sim')
+park = ""
+exe = os.path.abspath("sim")
 
 try:
     import vivarium_cytosim.library.go_sim_lib as go_sim_lib
@@ -73,7 +75,8 @@ except ImportError:
     sys.exit()
 
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
+
 
 def executable(arg):
     return os.path.isfile(arg) and os.access(arg, os.X_OK)
@@ -81,7 +84,7 @@ def executable(arg):
 
 def run(conf, name):
     """
-        run executable 'exe' with config 'conf' in a directory of name 'name'
+    run executable 'exe' with config 'conf' in a directory of name 'name'
     """
     try:
         (val, res) = go_sim_lib.run(exe, conf, name)
@@ -95,7 +98,7 @@ def run(conf, name):
     if os.path.isdir(park):
         try:
             res = go_sim_lib.move_directory(res, park, name)
-            with open(res+"/log.txt", "a") as f:
+            with open(res + "/log.txt", "a") as f:
                 f.write("parked    %s\n" % time.asctime())
             out.write("            ---> parked in %s\n" % res)
         except Exception as e:
@@ -104,7 +107,7 @@ def run(conf, name):
 
 def local_run(exe, conf, name, park):
     """
-        run executable 'exe' with config 'conf' in a directory of name 'name'
+    run executable 'exe' with config 'conf' in a directory of name 'name'
     """
     try:
         (val, res) = go_sim_lib.run(exe, conf, name)
@@ -118,13 +121,11 @@ def local_run(exe, conf, name, park):
     os.makedirs(park, exist_ok=True)
     try:
         res = go_sim_lib.move_directory(res, park, name)
-        with open(res+"/log.txt", "a") as f:
+        with open(res + "/log.txt", "a") as f:
             f.write("parked    %s\n" % time.asctime())
         out.write("            ---> parked in %s\n" % res)
     except Exception as e:
         err.write("go_sim.py cannot move directory: %s\n" % repr(e))
-
-
 
 
 def run_queue(queue):
@@ -136,26 +137,27 @@ def run_queue(queue):
             arg = queue.get(True, 1)
             run(*arg)
         except:
-            break;
+            break
 
 
 def process(conf, preconf, name, queue):
     """
-        run configurations files generated from 'conf'
+    run configurations files generated from 'conf'
     """
     print(name)
     if not os.path.isfile(conf):
         err.write("go_sim.py: file '%s' does not exist\n" % conf)
         sys.exit()
-    
+
     # generate config file(s):
     if preconf:
         import tempfile
-        tmp = tempfile.mkdtemp('', name+'-', '.')
+
+        tmp = tempfile.mkdtemp("", name + "-", ".")
         files = go_sim_lib.make_config(conf, repeat, preconf, tmp)
     else:
         files = go_sim_lib.copy_config(conf, repeat)
-        
+
     if not files:
         err.write("go_sim.py could not generate config files\n")
         sys.exit()
@@ -164,42 +166,43 @@ def process(conf, preconf, name, queue):
     # process all files created:
     for i, f in enumerate(files):
         if len(files) > 1:
-            n = name + '-%04i' % i
+            n = name + "-%04i" % i
         else:
             n = name
         if njobs > 1:
             queue.put((f, n))
-            #print('Queued ' + f + ' ' + n)
+            # print('Queued ' + f + ' ' + n)
         else:
             run(f, n)
 
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
+
 
 def main(args):
     global njobs, repeat, park, exe, queue
-    preconf = ''
-    name    = 'run0000'
-    files   = []
-    njobs   = 1
-    
+    preconf = ""
+    name = "run0000"
+    files = []
+    njobs = 1
+
     # parse arguments list:
     for arg in args:
         if arg.isdigit():
             repeat = int(arg)
-        elif arg.startswith('nproc=') or arg.startswith('njobs='):
+        elif arg.startswith("nproc=") or arg.startswith("njobs="):
             njobs = int(arg[6:])
-        elif arg.startswith('jobs='):
+        elif arg.startswith("jobs="):
             njobs = int(arg[5:])
-        elif arg.startswith('script='):
+        elif arg.startswith("script="):
             preconf = arg[7:]
         elif executable(arg):
             exe = os.path.abspath(arg)
         elif os.path.isfile(arg):
             files.append(arg)
-        elif arg.startswith('name='):
+        elif arg.startswith("name="):
             name = arg[5:]
-        elif arg.startswith('park='):
+        elif arg.startswith("park="):
             park = arg[5:]
             if not os.path.isdir(park):
                 err.write("go_sim.py: `%s' is not a directory\n" % park)
@@ -208,7 +211,7 @@ def main(args):
             err.write("go_sim.py: unexpected argument `%s'\n" % arg)
             err.write("         : there is no file with that name\n")
             sys.exit()
-        
+
     if not files:
         err.write("You should specify a config file on the command line\n")
         sys.exit()
@@ -222,6 +225,7 @@ def main(args):
     if njobs > 1:
         try:
             from multiprocessing import Process, Queue
+
             queue = Queue()
         except ImportError:
             out.write("Warning: multiprocessing unavailable\n")
@@ -233,8 +237,7 @@ def main(args):
         print(name)
         process(conf, preconf, name, queue)
         cnt += 1
-        name = 'run%04i' % cnt
-        
+        name = "run%04i" % cnt
 
     # process jobs:
     if njobs > 1:
@@ -246,7 +249,7 @@ def main(args):
     return 0
 
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 
 
 if __name__ == "__main__":
@@ -256,5 +259,3 @@ if __name__ == "__main__":
         # for arg in sys.argv:
         #     print(arg)
         main(sys.argv[1:])
-
-

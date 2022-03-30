@@ -2,16 +2,10 @@
 name: Bug Report
 about: '"Something''s wrong..."'
 title: ''
-labels: 'bug'
+labels: ''
 assignees: ''
 
 ---
-
-## System and Software
-* simulariumio Version:
-* Python Version:
-* Operating System:
-
 
 ## Description
 *A clear description of the bug*

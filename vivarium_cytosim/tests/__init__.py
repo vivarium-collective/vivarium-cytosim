@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-"""Unit test package for vivarium_models."""
+"""Unit test package for vivarium_cytosim."""

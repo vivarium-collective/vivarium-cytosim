@@ -8,13 +8,16 @@ assignees: ''
 ---
 
 ## Use Case
+*Please provide a use case to help us understand your request in context*
 
-_Please provide a use case to help us understand your request in context_
 
-## Acceptance Criteria
 
-_Please describe how you know this is done_
 
-## Details
+## Solution
+*Please describe your ideal solution*
 
-_Please provide any helpful specifications_
+
+
+
+## Alternatives
+*Please describe any alternatives you've considered, even if you've dismissed them*
