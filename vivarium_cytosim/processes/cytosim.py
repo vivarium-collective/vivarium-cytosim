@@ -84,7 +84,7 @@ def temperature_to_kT(temp):
 
 class CytosimProcess(Process):
     defaults = {
-        "model_name": "cytosim_model",
+        "model_name": "cytosim-buckling",
         "internal_timestep": 0.001,
         "viscosity": 1,
         "actin_segmentation": 0.1,
@@ -102,7 +102,11 @@ class CytosimProcess(Process):
         super().__init__(parameters)
 
         self.input_path = Path(self.parameters["input_directory"])
+        if not os.path.exists(self.input_path):
+            os.makedirs(self.input_path)
         self.output_path = Path(self.parameters["output_directory"])
+        if not os.path.exists(self.output_path):
+            os.makedirs(self.output_path)
 
     def ports_schema(self):
         ports = fibers_schema()
@@ -181,11 +185,9 @@ def main():
             "cytosim": {
                 "fibers": ("fibers",),
                 "fibers_box_extent": ("fibers_box_extent",),
-                "choices": ("choices",),
             }
         },
         initial_state=initial_fibers,
-        emitter="simularium",
     )
 
     engine.update(10.0)
