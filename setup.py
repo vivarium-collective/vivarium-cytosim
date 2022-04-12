@@ -72,6 +72,8 @@ setup(
     include_package_data=True,
     keywords=["vivarium", "cytosim"],
     name="vivarium_cytosim",
+    package_data={
+        '': ['templates/*']},
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*"]),
     python_requires=">=3.8",
     setup_requires=setup_requirements,
