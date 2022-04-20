@@ -4,11 +4,7 @@ import shutil
 from vivarium.core.process import Process
 from vivarium.core.engine import Engine
 
-from jinja2 import Environment, PackageLoader, select_autoescape
-
-env = Environment(
-    loader=PackageLoader("vivarium_cytosim"), autoescape=select_autoescape()
-)
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from pathlib import Path
 import subprocess
@@ -94,6 +90,7 @@ class CytosimProcess(Process):
         "confine": None,
         "input_directory": "in/",
         "output_directory": "out/",
+        "template_directory": "vivarium_cytosim/templates/",
         "cytosim_sim": "../cytosim/bin/sim",
         "cytosim_report": "../cytosim/bin/report",
     }
@@ -101,12 +98,21 @@ class CytosimProcess(Process):
     def __init__(self, parameters=None):
         super().__init__(parameters)
 
+        self._jinja_environment = None
         self.input_path = Path(self.parameters["input_directory"])
         if not os.path.exists(self.input_path):
             os.makedirs(self.input_path)
         self.output_path = Path(self.parameters["output_directory"])
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
+
+    def jinja_environment(self):
+        if self._jinja_environment is None:
+            self._jinja_environment = Environment(
+                loader=FileSystemLoader(self.parameters["template_directory"]),
+                autoescape=select_autoescape(),
+            )
+        return self._jinja_environment
 
     def ports_schema(self):
         ports = fibers_schema()
@@ -124,7 +130,8 @@ class CytosimProcess(Process):
 
         box_extent = state["fibers_box_extent"] * RELATIVE_MICRON * BOUNDARY_BUFFER
 
-        template = env.get_template(self.parameters["cytosim_template"])
+        system_template = self.parameters["model_name"] + ".cym"
+        template = self.jinja_environment().get_template(system_template)
         cytosim_config = template.render(
             internal_timestep=self.parameters["internal_timestep"],
             # radius=self.parameters['cell_radius'],
