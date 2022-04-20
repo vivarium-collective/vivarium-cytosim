@@ -10,6 +10,12 @@ A Vivarium wrapper for [Cytosim](https://gitlab.com/f-nedelec/cytosim)
 **Development Head:** `pip install git+https://github.com/vivarium-collective/vivarium-cytosim.git`
 **Local Editable Install** `pip install -e .[dev]` (or `pip install -e .\[dev\]` on mac) from repo root directory
 
+Or use Conda with the `env.yml` file to create the environment: 
+```
+conda env create -f env.yml
+conda activate vivarium-models
+```
+
 ### Cytosim Installation
 
 First, clone the repo:

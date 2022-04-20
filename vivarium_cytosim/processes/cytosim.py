@@ -21,63 +21,6 @@ RELATIVE_MICRON = 0.001
 BOUNDARY_BUFFER = 0.95
 
 
-def fiber_section(id, fiber):
-    points = fiber["points"]
-    # convert to microns
-    point_strs = [
-        " ".join([str(element * RELATIVE_MICRON) for element in point])
-        for point in points
-    ]
-    return {"id": id, "points": point_strs}
-
-    # point_line = ', '.join(point_strs)
-
-    # lines = [
-    #     f'new actin',
-    #     '{',
-    #     f'    mark = {id}',
-    #     f'    shape = {point_line}',
-    #     '}',
-    # ]
-
-    # return '\n'.join(lines)
-
-
-def load_report(output):
-    data = CytosimData(
-        object_info={
-            "fibers": CytosimObjectInfo(
-                cytosim_file=InputFileData(file_contents=output),
-                display_data={1: DisplayData(name="Actin-Polymer")},
-            )
-        }
-    )
-    converter = CytosimConverter(data)
-    all_ids = converter._data.agent_data.unique_ids[-1]
-    all_fibers = converter._data.agent_data.subpoints[-1]
-    all_n_points = converter._data.agent_data.n_subpoints[-1]
-    all_types = converter._data.agent_data.types[-1]
-
-    return {
-        str(int(id)): {
-            "type_name": fiber_type,
-            "points": [
-                points / RELATIVE_MICRON for points in fiber_points[: int(n_points)]
-            ],
-        }
-        for id, fiber_points, n_points, fiber_type in zip(
-            all_ids, all_fibers, all_n_points, all_types
-        )
-    }
-
-
-def temperature_to_kT(temp):
-    return 1.3806e-5 * (temp + 273.15)
-
-
-# def random_actin_fiber(bounds):
-
-
 class CytosimProcess(Process):
     defaults = {
         "model_name": "cytosim-buckling",
@@ -85,8 +28,6 @@ class CytosimProcess(Process):
         "viscosity": 1,
         "actin_segmentation": 0.1,
         "temperature": 37,  # in Celsius
-        "cytosim_template": "cytosim-buckling.cym",
-        "cell_radius": 5,
         "confine": None,
         "input_directory": "in/",
         "output_directory": "out/",
@@ -97,7 +38,6 @@ class CytosimProcess(Process):
 
     def __init__(self, parameters=None):
         super().__init__(parameters)
-
         self._jinja_environment = None
         self.input_path = Path(self.parameters["input_directory"])
         if not os.path.exists(self.input_path):
@@ -122,20 +62,21 @@ class CytosimProcess(Process):
         return {}
 
     def next_update(self, timestep, state):
-        initial_fibers = state["fibers"]
+        print("in cytosim process next update")
 
+        init_fibers = state["fibers"]
+
+        # render template
         fiber_sections = [
-            fiber_section(id, fiber) for id, fiber in initial_fibers.items()
+            CytosimProcess._fiber_section(id, fiber)
+            for id, fiber in init_fibers.items()
         ]
-
         box_extent = state["fibers_box_extent"] * RELATIVE_MICRON * BOUNDARY_BUFFER
-
         system_template = self.parameters["model_name"] + ".cym"
         template = self.jinja_environment().get_template(system_template)
         cytosim_config = template.render(
             internal_timestep=self.parameters["internal_timestep"],
-            # radius=self.parameters['cell_radius'],
-            kT=temperature_to_kT(self.parameters["temperature"]),
+            kT=CytosimProcess._temperature_to_kT(self.parameters["temperature"]),
             viscosity=self.parameters["viscosity"],
             actin_segmentation=self.parameters["actin_segmentation"],
             confine=self.parameters["confine"],
@@ -145,47 +86,84 @@ class CytosimProcess(Process):
             filaments=fiber_sections,
             simulation_time=int(timestep / self.parameters["internal_timestep"]),
         )
-
-        config_path = self.input_path / self.parameters["cytosim_template"]
+        config_path = self.input_path / (self.parameters["model_name"] + ".cym")
         with open(config_path, "w") as cytosim_file:
             cytosim_file.write(cytosim_config)
 
+        # run Cytosim
         go_sim.local_run(
             os.path.abspath(self.parameters["cytosim_sim"]),
             config_path,
             self.parameters["model_name"],
             self.output_path,
         )
-
         previous_dir = os.getcwd()
         report_base = self.output_path / self.parameters["model_name"]
         report_exec = os.path.abspath(self.parameters["cytosim_report"])
         os.chdir(report_base)
-
         report_command = [
             report_exec,
             "fiber:points",
         ]
-
         cytosim_process = subprocess.Popen(report_command, stdout=subprocess.PIPE)
         output, error = cytosim_process.communicate()
-
         os.chdir(previous_dir)
         shutil.rmtree(report_base)
-
         print(output.decode("utf-8"))
-        report = load_report(output.decode("utf-8"))
+
+        # get outputs
+        report = CytosimProcess._load_report(output.decode("utf-8"))
 
         # import ipdb; ipdb.set_trace()
 
         return {"fibers": report}
+
+    @staticmethod
+    def _fiber_section(id, fiber):
+        points = fiber["points"]
+        # convert to microns
+        point_strs = [
+            " ".join([str(element * RELATIVE_MICRON) for element in point])
+            for point in points
+        ]
+        return {"id": id, "points": point_strs}
+
+    @staticmethod
+    def _load_report(output):
+        data = CytosimData(
+            object_info={
+                "fibers": CytosimObjectInfo(
+                    cytosim_file=InputFileData(file_contents=output),
+                    display_data={1: DisplayData(name="Actin-Polymer")},
+                )
+            }
+        )
+        converter = CytosimConverter(data)
+        all_ids = converter._data.agent_data.unique_ids[-1]
+        all_fibers = converter._data.agent_data.subpoints[-1]
+        all_n_points = converter._data.agent_data.n_subpoints[-1]
+        all_types = converter._data.agent_data.types[-1]
+        return {
+            str(int(id)): {
+                "type_name": fiber_type,
+                "points": [
+                    points / RELATIVE_MICRON for points in fiber_points[: int(n_points)]
+                ],
+            }
+            for id, fiber_points, n_points, fiber_type in zip(
+                all_ids, all_fibers, all_n_points, all_types
+            )
+        }
+
+    @staticmethod
+    def _temperature_to_kT(temp):
+        return 1.3806e-5 * (temp + 273.15)
 
 
 def main():
     cytosim = CytosimProcess(
         {"confine": {"side": "inside", "force": 100, "space": "cell"}}
     )
-
     engine = Engine(
         processes={"cytosim": cytosim},
         topology={
@@ -196,11 +174,8 @@ def main():
         },
         initial_state=initial_fibers,
     )
-
-    engine.update(10.0)
+    engine.update(3.0)
     engine.emitter.get_data()
-
-    # import ipdb; ipdb.set_trace()
 
 
 if __name__ == "__main__":
