@@ -154,6 +154,5 @@ cython_debug/
 *.DS_Store
 
 # user generated data
-/in
-/out
+/working
 *.simularium

@@ -41,6 +41,7 @@ requirements = [
     "vivarium-core",
     "simulariumio>=1.5.0",
     "Jinja2>=3.0.3",
+    "docker",
 ]
 
 extra_requirements = {
