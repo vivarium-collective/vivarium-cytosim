@@ -71,7 +71,7 @@ class CytosimProcess(Process):
         self._render_template(state["fibers"], state["fibers_box_extent"], timestep)
         CytosimProcess._run_cytosim(self.working_path)
         fibers = CytosimProcess._load_report(self.working_path)
-        
+
         return {"fibers_box_extent": state["fibers_box_extent"], "fibers": fibers}
 
     @staticmethod
