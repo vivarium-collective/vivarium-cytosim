@@ -49,10 +49,6 @@ new actin
 {
     mark = {{filament.id}}
     shape = {{filament.points|join(', ')}}
-    {% if attach %}
-    attach1 = link, 0, minus_end
-    attach2 = link, 0, plus_end
-    {% endif %}
 }
 {% endfor %}
 

@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 from vivarium.core.process import Process
 from vivarium.core.engine import Engine
@@ -24,11 +25,12 @@ class CytosimProcess(Process):
         "model_name": "cytosim-buckling",
         "internal_timestep": 0.001,
         "viscosity": 1,
-        "actin_segmentation": 0.1,
+        "actin_segmentation": 0.01,
         "temperature": 37,  # in Celsius
         "confine": None,
         "working_directory": "working/",
         "template_directory": "vivarium_cytosim/templates/",
+        "attach": True,
     }
 
     def __init__(self, parameters=None):
@@ -68,7 +70,11 @@ class CytosimProcess(Process):
     def next_update(self, timestep, state):
         print("in cytosim process next update")
 
+        self._increment_end_point_position(state["fibers"])
         self._render_template(state["fibers"], state["fibers_box_extent"], timestep)
+        
+        import ipdb; ipdb.set_trace()
+        
         CytosimProcess._run_cytosim(self.working_path)
         fibers = CytosimProcess._load_report(self.working_path)
 
@@ -83,6 +89,9 @@ class CytosimProcess(Process):
             for point in points
         ]
         return {"id": id, "points": point_strs}
+    
+    def _increment_end_point_position(self, init_fibers):
+        init_fibers['1']["points"][-1][0] -= 5
 
     def _render_template(self, init_fibers, fibers_box_extent, timestep):
         fiber_sections = [
@@ -102,6 +111,7 @@ class CytosimProcess(Process):
             bounds_y=box_extent[1],
             bounds_z=box_extent[2],
             filaments=fiber_sections,
+            attach=self.parameters["attach"],
             simulation_time=int(timestep / self.parameters["internal_timestep"]),
         )
         config_path = self.working_path / "config.cym"
@@ -166,6 +176,21 @@ def main():
     cytosim = CytosimProcess(
         {"confine": {"side": "inside", "force": 100, "space": "cell"}}
     )
+    fiber_points = []
+    x_value = -250
+    for point in range(51):
+        fiber_points.append(np.array([x_value, 0.0, 0.0]))
+        x_value += 500 / 50
+    fibers = {
+        "fibers_box_extent": np.array([4000.0, 2000.0, 2000.0]),
+        "fibers": {
+            "1": {
+                "type_name": "Actin-Polymer",
+                "points": fiber_points,
+            }
+        }
+    }
+    
     engine = Engine(
         processes={"cytosim": cytosim},
         topology={
@@ -174,7 +199,7 @@ def main():
                 "fibers_box_extent": ("fibers_box_extent",),
             }
         },
-        initial_state=initial_fibers,
+        initial_state=fibers,
     )
     engine.update(3.0)
     engine.emitter.get_data()
