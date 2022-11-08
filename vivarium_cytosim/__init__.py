@@ -13,4 +13,4 @@ def get_module_version():
     return __version__
 
 
-from .processes.cytosim import CytosimProcess  # noqa: F401
+from .processes.template_cytosim import CytosimProcess  # noqa: F401

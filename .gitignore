@@ -156,3 +156,4 @@ cython_debug/
 # user generated data
 /working
 *.simularium
+messages.cmo
